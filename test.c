@@ -8,6 +8,7 @@ int main () {
    const char check[5] = "exit";
    while(strcmp(check,input) != 0)
    {
+      printf("$");
       gets(input);
       token = strtok(input, d);
       while( token != NULL )
