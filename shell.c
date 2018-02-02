@@ -23,7 +23,7 @@ void readInput(){
       printf("$");
 
       fgets(input,512,stdin);
-        if(strcmp(check,input) == 0){
+        if(strcmp(check,input) == 0 | feof(stdin)){
             break;
         }
         if(input[strlen(input)-1]!= '\n'){
