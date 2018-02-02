@@ -19,7 +19,8 @@ return 0;
 Reads,parses the user input and returns a char pointer to the tokens array.
 Parameters: char tokens[MAXCHAR]
 */
-char* readInput(char tokens[MAXCHAR]){
+char* readInput(char tokens[MAXCHAR])
+{
 
     char input[MAXCHAR] = "";
     const char d[13] = " \t<>|;&\n";
@@ -31,9 +32,6 @@ char* readInput(char tokens[MAXCHAR]){
       printf("%c",systemsymbol);
 
       fgets(input,512,stdin);
-        if(strcmp(check,input) == 0 | feof(stdin)){
-
-      fgets(input,MAXCHAR,stdin);
 	//Checks if "exit" or Ctrl + D are present in the input...
         if((strcmp(check,input) == 0) || feof(stdin) )
 	{
@@ -54,10 +52,8 @@ char* readInput(char tokens[MAXCHAR]){
       {
 	if (strcmp(token,"\n") != 0)
 	{
-		
-			strcat(tokens,token);
-		
-	printf("%s\n", token );
+		strcat(tokens,token);		
+		printf("%s\n", token );
 	}
       token = strtok(NULL, d);
       }
