@@ -31,10 +31,15 @@ char* readInput(char tokens[MAXCHAR]){
    {
       printf("%c",systemsymbol);
 
+<<<<<<< HEAD
+      fgets(input,512,stdin);
+        if(strcmp(check,input) == 0 | feof(stdin)){
+=======
       fgets(input,MAXCHAR,stdin);
 	//Checks if "exit" or Ctrl + D are present in the input...
         if((strcmp(check,input) == 0) || feof(stdin) )
 	{
+>>>>>>> 7ee70f2e947fbc4ff6288ddea6ceae374141c9de
             break;
         }
 	//Checks if the input is more than 512 symbols...        
