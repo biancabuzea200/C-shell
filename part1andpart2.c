@@ -3,25 +3,32 @@
 #include <stdlib.h>
 #include <sys/types.h>
 #include <unistd.h>
+#include <sys/wait.h>
+
 
 #define MAXCHAR 512
 
+
 char** readInput(char** tokens);
 void shakeItOff(char** argv, char* path);
+int getNumberOfTokens(char** tokens);
 
 int main () 
 {
 char** input;
-char PATH[50] = "/bin/";
-
+char path[100];
+strcpy(path,"/bin/");
 input = readInput(input);
 
 	//Tests if the tokens have been stored correctly... 
 	printf("%s\n", input[0]);
 
-strcat(PATH,input[0]);
-printf("PATH IS -> %s\n", PATH);
-shakeItOff(input,PATH);		
+
+
+//strcat(PATH,input[0]);
+printf("PATH IS -> %s\n", getenv("PATH"));
+//printf("NUMMBER OF TOKENS IS: %d\n",getNumberOfTokens(input));
+shakeItOff(input,path);		
 return 0;
 }
 
@@ -87,25 +94,41 @@ pid_t pid;
 //fork a child process
 pid = fork();
 
+strcat(path,argv[0]);
+
 if(pid < 0) 
 { 
 	//if error occurs	
 	fprintf(stderr,"Fork Failed");
 	exit(-1);
 }
-else 
-	if (pid == 0)
-	{
+else if (pid == 0)
+{
+	printf("sadsdsd\n");
 		//child process
-		execlp(path,argv[0],argv[1],NULL);
-	}
-	else
+		execv(path,argv);
+}
+else
 	{
 		//parent process
 		wait(NULL);
-		printf("Child Complete");
+		printf("Child Complete\n");
 		exit(0);
 	}
+
+
 }
 
+
+int getNumberOfTokens(char** tokens)
+{
+int i = 0,cnt = 0;
+
+while (strlen(tokens[i]) > 0)
+{
+	i++;
+	cnt++;
+}
+return cnt;
+}
 
