@@ -9,7 +9,6 @@
 
 char **readInput(char **tokens);
 void executeCommand(char **tokens);
-int getNumberOfTokens(char **tokens);
 
 int main()
 {
@@ -45,16 +44,9 @@ char **readInput(char **tokens)
 	while (1)
 	{
 		
-		token_cnt = 0;		
-		
-		//for (int i = 0; i < 50; i++)
-		//{
-		//tokens[i] = (char *)malloc(MAXCHAR * sizeof(char));
-		//}
-		
+		token_cnt = 0;			
 		printf("%c ", systemsymbol);
 
-		
 		fgets(input, MAXCHAR, stdin);
 		
 		//Checks if "exit" or Ctrl + D are present in the input...
@@ -82,7 +74,6 @@ char **readInput(char **tokens)
 		{
 			if (strcmp(token, "\n") != 0)
 			{
-				
 				tokens[token_cnt]=strdup(token);
 				printf("COPYING '%s' into tokens[%d]\n", token, token_cnt);
 				token_cnt++;
