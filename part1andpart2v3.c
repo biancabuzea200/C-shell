@@ -7,7 +7,7 @@
 
 #define MAXCHAR 512
 
-char **readInput(char **tokens);
+void readInput();
 void executeCommand(char *command, char **argv);
 int getNumberOfTokens(char **tokens);
 
@@ -18,7 +18,7 @@ int main()
 
 	// Print PATH environment variable
 	printf("PATH IS -> %s\n", getenv("PATH"));
-	input = readInput(input);
+	readInput();
 	return 0;
 }
 
@@ -26,7 +26,7 @@ int main()
 Reads,parses the user input and returns a char pointer to the tokens array.
 Parameters: char tokens[MAXCHAR]
 */
-char **readInput(char **tokens)
+void readInput()
 {
 	int token_cnt = 0;
 	int i = 0;
@@ -35,12 +35,12 @@ char **readInput(char **tokens)
 	const char delimiters[13] = " \t<>|;&\n";
 	char *token = "";
 	char *command;
-	char **argv;
+	char **tokens;
 	const char exit_command[6] = "exit\n";
 	char c, systemsymbol = '$';
 
 	tokens = (char **)malloc(50 * sizeof(char *));
-	argv = (char **)malloc(50 * sizeof(char *));
+	//argv = (char **)malloc(50 * sizeof(char *));
 	for (int i = 0; i < 50; i++)
 	{
 		tokens[i] = (char *)malloc(MAXCHAR * sizeof(char));
@@ -55,7 +55,7 @@ char **readInput(char **tokens)
 		// Initialize argv -> memory allocation
 		for (int i = 0; i < 50; i++)
 		{
-			argv[i] = (char *)malloc(MAXCHAR * sizeof(char));
+			tokens[i] = (char *)malloc(MAXCHAR * sizeof(char));
 		}
 
 		fgets(input, MAXCHAR, stdin);
@@ -79,9 +79,9 @@ char **readInput(char **tokens)
 		}
 
 		token = strtok(input, delimiters);
-		if(token != NULL)
+		//if(token != NULL)
 		{
-			command = strdup(token);
+		//	command = strdup(token);
 		}
 		args_len = 0;
 		while (token != NULL)
@@ -89,29 +89,28 @@ char **readInput(char **tokens)
 			if (strcmp(token, "\n") != 0)
 			{
 				strcpy(tokens[token_cnt], token);
-				strcpy(argv[args_len], token);
+				//strcpy(argv[args_len], token);
 				args_len++;
 				printf("COPYING '%s' into tokens[%d]\n", token, token_cnt);
 				token_cnt++;
 			}
 			token = strtok(NULL, delimiters);
 		}
-		argv[args_len] = NULL;
-		executeCommand(command, argv);
+		tokens[args_len] = NULL;
+		executeCommand(tokens[0], tokens);
 
 		// Free argv -> reset it
-		for (int i = 0; argv[i] != NULL; i++)
+		for (int i = 0; tokens[i] != NULL; i++)
 		{
-			free(argv[i]);
+			free(tokens[i]);
 		}
 	}
 
 	//Tests if the tokens have been stored correctly...
-	/*printf("\n");
+	printf("\n");
 	for(i = 0; i < token_cnt; i++) {
 		printf("TOKEN[%d]: %s\n", i, tokens[i]);
-	}*/
-	return tokens;
+	}
 }
 
 void executeCommand(char *command, char **args)
