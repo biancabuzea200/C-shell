@@ -5,130 +5,133 @@
 #include <unistd.h>
 #include <sys/wait.h>
 
-
 #define MAXCHAR 512
 
+char **readInput(char **tokens);
+void executeCommand(char **tokens);
+int getNumberOfTokens(char **tokens);
 
-char** readInput(char** tokens);
-void shakeItOff(char** argv, char* path);
-int getNumberOfTokens(char** tokens);
-
-int main () 
+int main()
 {
-char** input;
-char path[100];
-strcpy(path,"/bin/");
-input = readInput(input);
+	char **input;
+	char path[100];
 
-	//Tests if the tokens have been stored correctly... 
-	printf("%s\n", input[0]);
+	// Print PATH environment variable
+	printf("PATH IS -> %s\n", getenv("PATH"));
+	
+	input = readInput(input);
 
-
-
-//strcat(PATH,input[0]);
-printf("PATH IS -> %s\n", getenv("PATH"));
-//printf("NUMMBER OF TOKENS IS: %d\n",getNumberOfTokens(input));
-shakeItOff(input,path);		
-return 0;
+	return 0;
 }
 
 /*
 Reads,parses the user input and returns a char pointer to the tokens array.
 Parameters: char tokens[MAXCHAR]
 */
-char** readInput(char** tokens)
+char **readInput(char **tokens)
 {
-int cnt = 0;
-char input[MAXCHAR] = "";
-const char d[13] = " \t<>|;&\n";
-char *token = "";
-const char check[6] = "exit\n";
-char c,systemsymbol = '$';
-   
-	tokens = (char**) malloc(50*sizeof(char*));
-	for (int i = 0; i < 50; i++)
-	{
-   		tokens[i] = (char*) malloc(MAXCHAR*sizeof(char));
-	}
+	int token_cnt = 0; 
+	char input[MAXCHAR] = "";
+	const char delimiters[13] = " \t<>|;&\n";
+	char *token = "";
+	const char exit_command[6] = "exit\n";
+	char c, systemsymbol = '$';
 
-	printf("Array successfully created!\n");
+	tokens = (char **)malloc(50 * sizeof(char *));
 
-while(1)
-{
-	printf("%c",systemsymbol);
+	
+	printf("Tokens array successfully created!\n");
 
-	fgets(input,MAXCHAR,stdin);
-	//Checks if "exit" or Ctrl + D are present in the input...
-        if((strcmp(check,input) == 0) || feof(stdin) )
+	while (1)
 	{
-        	break;
-        }
-	//Checks if the input is more than 512 symbols...        
-	if(input[strlen(input)-1] != '\n')
-	{
-        	printf("%cThe command is too long!\n",systemsymbol);  
-		//The following line flushes the buffer after the 512th symbol...
-		while ((c = getchar()) != '\n' && c != EOF) {}
-        	strcpy(input,"");
-        }
+		
+		token_cnt = 0;		
+		
+		//for (int i = 0; i < 50; i++)
+		//{
+		//tokens[i] = (char *)malloc(MAXCHAR * sizeof(char));
+		//}
+		
+		printf("%c ", systemsymbol);
 
-	token = strtok(input, d);
-      
-	while( token != NULL )
-	{
-		if (strcmp(token,"\n") != 0)
+		
+		fgets(input, MAXCHAR, stdin);
+		
+		//Checks if "exit" or Ctrl + D are present in the input...
+		if ((strcmp(exit_command, input) == 0) || feof(stdin))
 		{
-			strcpy(tokens[cnt],token);
-			printf("COPYING %s into tokens[%d]\n",token,cnt);
-			cnt++;
+			printf("\n");
+			break;
 		}
-      	token = strtok(NULL, d);
-      	}
-}
-return tokens;
-}
 
-void shakeItOff(char** argv, char* path)
-{
-pid_t pid;
-//fork a child process
-pid = fork();
+		//Checks if the input is more than 512 symbols...
+		if (input[strlen(input) - 1] != '\n')
+		{
+			printf("The command is too long!\n");
+			printf("%c ", systemsymbol);
+			//The following line flushes the buffer after the 512th symbol...
+			while ((c = getchar()) != '\n' && c != EOF)
+			{
+			}
+			strcpy(input, "");
+		}
 
-strcat(path,argv[0]);
-
-if(pid < 0) 
-{ 
-	//if error occurs	
-	fprintf(stderr,"Fork Failed");
-	exit(-1);
-}
-else if (pid == 0)
-{
-	printf("sadsdsd\n");
-		//child process
-		execv(path,argv);
-}
-else
-	{
-		//parent process
-		wait(NULL);
-		printf("Child Complete\n");
-		exit(0);
+		token = strtok(input, delimiters);
+		
+		while (token != NULL)
+		{
+			if (strcmp(token, "\n") != 0)
+			{
+				
+				tokens[token_cnt]=strdup(token);
+				printf("COPYING '%s' into tokens[%d]\n", token, token_cnt);
+				token_cnt++;
+			}
+			token = strtok(NULL, delimiters);
+		}
+		tokens[token_cnt] = NULL;
+		
+		if(tokens[0] != NULL)
+		{		
+			executeCommand(tokens);
+		}
+		// Free tokens -> reset it
+		for (int i = 0; i < token_cnt; i++)
+		{
+			free(tokens[i]);
+		}
 	}
-
-
+	return tokens;
 }
 
-
-int getNumberOfTokens(char** tokens)
+void executeCommand(char **tokens)
 {
-int i = 0,cnt = 0;
+	pid_t pid;
+	int pid_status;
+	int exec_status;
 
-while (strlen(tokens[i]) > 0)
-{
-	i++;
-	cnt++;
-}
-return cnt;
-}
+	pid = fork();
 
+	// Fork a child process
+	if (pid < 0)
+	{
+		// Fork error
+		printf("Fork Failed\n");
+		exit(1);
+	}
+	else if (pid == 0)
+	{
+		// Child process
+		exec_status = execvp(tokens[0], tokens);
+		if (exec_status < 0)
+		{
+			perror(tokens[0]);
+			exit(2);
+		}
+	}
+	else
+	{ // Wait for completition
+		while (wait(&pid_status) != pid)
+			;
+	}
+}
