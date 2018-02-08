@@ -28,10 +28,14 @@ Parameters: char tokens[MAXCHAR]
 */
 char **readInput(char **tokens)
 {
-	int token_cnt = 0, i = 0, args_len;
+	int token_cnt = 0;
+	int i = 0;
+	int  args_len;
 	char input[MAXCHAR] = "";
 	const char delimiters[13] = " \t<>|;&\n";
-	char *token = "", *command, **argv;
+	char *token = "";
+	char *command;
+	char **argv;
 	const char exit_command[6] = "exit\n";
 	char c, systemsymbol = '$';
 
@@ -75,8 +79,10 @@ char **readInput(char **tokens)
 		}
 
 		token = strtok(input, delimiters);
-		strcpy(command, token);
-
+		if(token != NULL)
+		{
+			command = strdup(token);
+		}
 		args_len = 0;
 		while (token != NULL)
 		{
@@ -94,7 +100,7 @@ char **readInput(char **tokens)
 		executeCommand(command, argv);
 
 		// Free argv -> reset it
-		for (int i = 0; i < 50; i++)
+		for (int i = 0; argv[i] != NULL; i++)
 		{
 			free(argv[i]);
 		}
@@ -129,7 +135,8 @@ void executeCommand(char *command, char **args)
 		exec_status = execvp(command, args);
 		if (exec_status < 0)
 		{
-			printf("Command Exec Failed: is your command valid?\n");
+			//printf("Command Exec Failed: is your command valid?\n");
+			perror(command);
 			exit(2);
 		}
 	}
