@@ -65,16 +65,19 @@ char **readInput(char **tokens)
 			exit(0);
 		}
 
-		//Checks if the input is more than 512 symbols...
+		// Checks if the input is more than 512 symbols...
 		if (input[strlen(input) - 1] != '\n')
 		{
 			printf("The command is too long!\n");
-			printf("%s", systemsymbol);
-			//The following line flushes the buffer after the 512th symbol...
-			while ((c = getchar()) != '\n' && c != EOF)
-			{
-			}
+
+			// The following line flushes the buffer after the 512th symbol...
+			while ((c = getchar()) != '\n' && c != EOF) { }
+
+			// Clears the input
 			strcpy(input, "");
+			
+			// Get the next command
+			continue;
 		}
 
 		token = strtok(input, delimiters);
