@@ -183,12 +183,6 @@ void execute_command(char **tokens, char *initPath)
 			printf("Error! Invalid number of arguments for 'setpath'\n");
 		}
 	}
-	else if (strcmp(tokens[0], "exit") == 0)
-	{
-		setPath(initPath);
-
-		exit(0);
-	}
 	else
 	{
 		pid = fork();
