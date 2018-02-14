@@ -163,7 +163,14 @@ void execute_command(char **tokens, char *initPath)
 
 	if (strcmp(tokens[0], "getpath") == 0)
 	{
-		printPath();
+		if (getNumberOfTokens(tokens) == 1)
+		{
+			printPath();
+		}
+		else
+		{
+			printf("Error! Invalid number of arguments for 'getpath'\n");
+		}
 	}
 	else if (strcmp(tokens[0], "setpath") == 0)
 	{
@@ -173,7 +180,7 @@ void execute_command(char **tokens, char *initPath)
 		}
 		else
 		{
-			printf("Error! Invalid number of arguments for 'setpath'.\n");
+			printf("Error! Invalid number of arguments for 'setpath'\n");
 		}
 	}
 	else if (strcmp(tokens[0], "exit") == 0)
