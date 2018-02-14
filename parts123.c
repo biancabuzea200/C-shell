@@ -71,11 +71,13 @@ char **readInput(char **tokens)
 			printf("The command is too long!\n");
 
 			// The following line flushes the buffer after the 512th symbol...
-			while ((c = getchar()) != '\n' && c != EOF) { }
+			while ((c = getchar()) != '\n' && c != EOF)
+			{
+			}
 
 			// Clears the input
 			strcpy(input, "");
-			
+
 			// Get the next command
 			continue;
 		}
@@ -218,12 +220,11 @@ Parameters: char** tokens
 */
 int getNumberOfTokens(char **tokens)
 {
-	int i = 0, cnt = 0;
+	int i = 0;
 
 	while (tokens[i] != NULL)
 	{
 		i++;
-		cnt++;
 	}
-	return cnt;
+	return i;
 }
