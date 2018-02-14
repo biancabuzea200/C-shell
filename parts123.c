@@ -18,11 +18,10 @@ int getNumberOfTokens(char **tokens);
 int main()
 {
 	char **input;
-	char *path;
 
-	path = strdup(getenv("PATH"));
 	// Print PATH environment variable
-	printf("PATH IS -> %s\n", path);
+	printf("PATH IS -> ");
+	printPath();
 
 	setToHome();
 	input = readInput(input);
@@ -59,10 +58,10 @@ char **readInput(char **tokens)
 		fgets(input, MAXCHAR, stdin);
 
 		//Checks if "exit" or Ctrl + D are present in the input...
-		if (feof(stdin))
+		if ((strcmp(exit_command, input) == 0) || feof(stdin))
 		{
-			setPath(path);
-			printf("\n");
+			if (feof(stdin))
+				printf("\n");
 			exit(0);
 		}
 
