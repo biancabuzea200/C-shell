@@ -37,6 +37,8 @@ int main()
 
 	// Restore the original PATH
 	setPath(path);
+	printf("PATH IS -> ");
+	printPath();
 
 	return status;
 }
