@@ -183,7 +183,11 @@ void execute_command(char **tokens)
 	}
 	else if (strcmp(tokens[0], "cd") == 0)
 	{
-		if (getNumberOfTokens(tokens) == 2)
+		if (getNumberOfTokens(tokens) == 1)
+		{
+			setToHome();
+		}
+		else if (getNumberOfTokens(tokens) == 2)
 		{
 			if (chdir(tokens[1]) != 0)
 			{
