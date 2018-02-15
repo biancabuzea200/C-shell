@@ -8,11 +8,11 @@
 
 #define MAXCHAR 512
 
-int readInput(char **tokens);
+void readInput(char **tokens);
 void setToHome();
 void setPath(char *token);
 void printPath();
-int execute_command(char **tokens);
+void execute_command(char **tokens);
 int getNumberOfTokens(char **tokens);
 void wrongNumOfTokensError(char *command);
 
@@ -20,7 +20,6 @@ int main()
 {
 	char **input;
 	char *path;
-	int status;
 
 	// Print PATH environment variable
 	printf("PATH IS -> ");
@@ -33,21 +32,21 @@ int main()
 	setToHome();
 
 	// Read the input from the user
-	status = readInput(input);
+	readInput(input);
 
 	// Restore the original PATH
 	setPath(path);
 	printf("PATH IS -> ");
 	printPath();
 
-	return status;
+	return 0;
 }
 
 /*
 Reads, parses the user input and returns the program return status
 Parameters: char tokens[MAXCHAR]
 */
-int readInput(char **tokens)
+void readInput(char **tokens)
 {
 	int token_cnt = 0;
 	char input[MAXCHAR] = "";
@@ -71,7 +70,7 @@ int readInput(char **tokens)
 		{
 			if (feof(stdin))
 				printf("\n");
-			return 0;
+			return;
 		}
 
 		// Checks if the input is more than 512 symbols...
@@ -107,12 +106,9 @@ int readInput(char **tokens)
 
 		if (tokens[0] != NULL)
 		{
-			int status = execute_command(tokens);
-			if (status != 0)
-				return status;
+			execute_command(tokens);
 		}
 	}
-	return 0;
 }
 
 /*
@@ -157,7 +153,7 @@ void setPath(char *token)
 The following function executes the commands. 
 Parameters: char** tokens and char* initPath.
 */
-int execute_command(char **tokens)
+void execute_command(char **tokens)
 {
 	pid_t pid;
 	int pid_status;
@@ -208,7 +204,7 @@ int execute_command(char **tokens)
 		{
 			// Fork error
 			printf("Fork Failed\n");
-			return 1;
+			exit(1);
 		}
 		else if (pid == 0)
 		{
@@ -217,7 +213,7 @@ int execute_command(char **tokens)
 			if (exec_status < 0)
 			{
 				perror(tokens[0]);
-				return 0;
+				exit(2);
 			}
 		}
 		else
@@ -227,8 +223,6 @@ int execute_command(char **tokens)
 				;
 		}
 	}
-
-	return 0;
 }
 
 /*
