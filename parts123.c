@@ -143,10 +143,18 @@ Parameters: char* token
 */
 void setPath(char *token)
 {
-	if (setenv("PATH", token, 1) != 0)
+	struct stat buffer;
+	int status;
+	
+	status = lstat(token, &buffer);
+
+	if (status != 0)
+	{
+		printf("Invalid path!\n");	
+	}
+	else if (setenv("PATH",token,1) != 0)
 	{
 		printf("Error while setting the path!\n");
-	}
 }
 
 /*
