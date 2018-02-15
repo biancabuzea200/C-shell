@@ -162,7 +162,6 @@ int execute_command(char **tokens)
 	pid_t pid;
 	int pid_status;
 	int exec_status;
-	int command_status = 0;
 
 	if (strcmp(tokens[0], "getpath") == 0)
 	{
@@ -209,7 +208,7 @@ int execute_command(char **tokens)
 		{
 			// Fork error
 			printf("Fork Failed\n");
-			command_status = 1;
+			return 1;
 		}
 		else if (pid == 0)
 		{
@@ -218,6 +217,7 @@ int execute_command(char **tokens)
 			if (exec_status < 0)
 			{
 				perror(tokens[0]);
+				return 0;
 			}
 		}
 		else
@@ -228,7 +228,7 @@ int execute_command(char **tokens)
 		}
 	}
 
-	return command_status;
+	return 0;
 }
 
 /*
