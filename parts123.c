@@ -218,7 +218,6 @@ int execute_command(char **tokens)
 			if (exec_status < 0)
 			{
 				perror(tokens[0]);
-				command_status = 2;
 			}
 		}
 		else
