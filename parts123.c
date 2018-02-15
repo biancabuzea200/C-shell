@@ -14,6 +14,7 @@ void setPath(char *token);
 void printPath();
 void execute_command(char **tokens, char *initPath);
 int getNumberOfTokens(char **tokens);
+void wrongNumOfTokensError(char *command);
 
 int main()
 {
@@ -169,7 +170,7 @@ void execute_command(char **tokens, char *initPath)
 		}
 		else
 		{
-			printf("Error! Invalid number of arguments for 'getpath'\n");
+			wrongNumOfTokensError("getpath");
 		}
 	}
 	else if (strcmp(tokens[0], "setpath") == 0)
@@ -180,7 +181,7 @@ void execute_command(char **tokens, char *initPath)
 		}
 		else
 		{
-			printf("Error! Invalid number of arguments for 'setpath'\n");
+			wrongNumOfTokensError("setpath");
 		}
 	}
 	else if (strcmp(tokens[0], "cd") == 0)
@@ -194,7 +195,7 @@ void execute_command(char **tokens, char *initPath)
 		}
 		else
 		{
-			printf("Error! Invalid number of arguments for 'cd'\n");
+			wrongNumOfTokensError("cd");
 		}
 	}
 	else
@@ -242,4 +243,13 @@ int getNumberOfTokens(char **tokens)
 		i++;
 	}
 	return i;
+}
+
+/*
+The folowing function prints an error if the number of arguments for a command is wrong
+Parameters: char* command
+*/
+void wrongNumOfTokensError(char *command)
+{
+	printf("Error! Invalid number of arguments for '%s'\n", command);
 }
