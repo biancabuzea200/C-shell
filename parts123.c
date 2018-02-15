@@ -12,7 +12,7 @@ void readInput(char **tokens);
 void setToHome();
 void setPath(char *token);
 void printPath();
-void execute_command(char **tokens);
+int execute_command(char **tokens);
 int getNumberOfTokens(char **tokens);
 void wrongNumOfTokensError(char *command);
 
@@ -52,7 +52,7 @@ void readInput(char **tokens)
 	char input[MAXCHAR] = "";
 	const char delimiters[13] = " \t<>|;&\n";
 	char *token = "";
-	const char exit_command[6] = "exit\n";
+	
 	char c, *systemsymbol = "$ ";
 
 	tokens = (char **)malloc(50 * sizeof(char *));
@@ -65,11 +65,8 @@ void readInput(char **tokens)
 
 		fgets(input, MAXCHAR, stdin);
 
-		//Checks if "exit" or Ctrl + D are present in the input...
-		if ((strcmp(exit_command, input) == 0) || feof(stdin))
-		{
-			if (feof(stdin))
-				printf("\n");
+		if (feof(stdin)){
+			printf("\n");
 			return;
 		}
 
@@ -97,7 +94,7 @@ void readInput(char **tokens)
 			if (strcmp(token, "\n") != 0)
 			{
 				tokens[token_cnt] = strdup(token);
-				printf("COPYING '%s' into tokens[%d]\n", token, token_cnt);
+				
 				token_cnt++;
 			}
 			token = strtok(NULL, delimiters);
@@ -106,7 +103,10 @@ void readInput(char **tokens)
 
 		if (tokens[0] != NULL)
 		{
-			execute_command(tokens);
+			if(execute_command(tokens)== -1)
+			{	
+			break;
+			}
 		}
 	}
 }
@@ -143,30 +143,25 @@ Parameters: char* token
 */
 void setPath(char *token)
 {
-	struct stat buffer;
-	int status;
 	
-	status = lstat(token, &buffer);
-
-	if (status != 0)
-	{
-		printf("Invalid path!\n");	
-	}
-	else if (setenv("PATH",token,1) != 0)
-	{
+	
+		if (setenv("PATH",token,1) != 0)
+		{
 		printf("Error while setting the path!\n");
+		}
+	
 }
 
 /*
-The following function executes the commands. 
+The following function executes the commands. The function returns -1 if the exit command is invoked.
 Parameters: char** tokens and char* initPath.
 */
-void execute_command(char **tokens)
+int execute_command(char **tokens)
 {
 	pid_t pid;
 	int pid_status;
-	int exec_status;
-
+	const char exit_command[6] = "exit";
+	
 	if (strcmp(tokens[0], "getpath") == 0)
 	{
 		if (getNumberOfTokens(tokens) == 1)
@@ -199,7 +194,7 @@ void execute_command(char **tokens)
 		{
 			if (chdir(tokens[1]) != 0)
 			{
-				perror(tokens[0]);
+				perror(tokens[1]);
 			}
 		}
 		else
@@ -207,6 +202,22 @@ void execute_command(char **tokens)
 			wrongNumOfTokensError("cd");
 		}
 	}
+
+	else if(strcmp(exit_command, tokens[0]) == 0){
+
+	 	if(getNumberOfTokens(tokens) > 1){
+		printf("Invalid number of parameters for exit command!\n");
+		return 0;
+		}
+		else
+		{
+		 return -1;
+		}		
+		
+		
+			
+	}
+
 	else
 	{
 		pid = fork();
@@ -221,12 +232,11 @@ void execute_command(char **tokens)
 		else if (pid == 0)
 		{
 			// Child process
-			exec_status = execvp(tokens[0], tokens);
-			if (exec_status < 0)
-			{
+			execvp(tokens[0], tokens);
+			
 				perror(tokens[0]);
 				exit(2);
-			}
+			
 		}
 		else
 		{
@@ -234,7 +244,9 @@ void execute_command(char **tokens)
 			while (wait(&pid_status) != pid)
 				;
 		}
+	
 	}
+	return 0;
 }
 
 /*
