@@ -8,33 +8,44 @@
 
 #define MAXCHAR 512
 
-char **readInput(char **tokens);
+int readInput(char **tokens);
 void setToHome();
 void setPath(char *token);
 void printPath();
-void execute_command(char **tokens, char *initPath);
+int execute_command(char **tokens);
 int getNumberOfTokens(char **tokens);
 void wrongNumOfTokensError(char *command);
 
 int main()
 {
 	char **input;
+	char *path;
+	int status;
 
 	// Print PATH environment variable
 	printf("PATH IS -> ");
 	printPath();
 
-	setToHome();
-	input = readInput(input);
+	// Save the PATH to restore it later
+	path = strdup(getenv("PATH")); 
 
-	return 0;
+	// Set the current direcotry to home
+	setToHome();
+
+	// Read the input from the user
+	status = readInput(input);
+
+	// Restore the original PATH
+	setPath(path);
+
+	return status;
 }
 
 /*
-Reads, parses the user input and returns a char pointer to the tokens array.
+Reads, parses the user input and returns the program return status
 Parameters: char tokens[MAXCHAR]
 */
-char **readInput(char **tokens)
+int readInput(char **tokens)
 {
 	int token_cnt = 0;
 	char input[MAXCHAR] = "";
@@ -42,14 +53,9 @@ char **readInput(char **tokens)
 	char *token = "";
 	const char exit_command[6] = "exit\n";
 	char c, *systemsymbol = "$ ";
-	char *path;
 
 	tokens = (char **)malloc(50 * sizeof(char *));
 	printf("Tokens array successfully created!\n");
-
-	path = strdup(getenv("PATH"));
-	// Print PATH environment variable
-	printf("PATH IS -> %s\n", path);
 
 	while (1)
 	{
@@ -63,7 +69,7 @@ char **readInput(char **tokens)
 		{
 			if (feof(stdin))
 				printf("\n");
-			exit(0);
+			return 0;
 		}
 
 		// Checks if the input is more than 512 symbols...
@@ -99,10 +105,12 @@ char **readInput(char **tokens)
 
 		if (tokens[0] != NULL)
 		{
-			execute_command(tokens, path);
+			int status = execute_command(tokens);
+			if (status != 0)
+				return status;
 		}
 	}
-	return tokens;
+	return 0;
 }
 
 /*
@@ -137,16 +145,7 @@ Parameters: char* token
 */
 void setPath(char *token)
 {
-	struct stat buffer;
-	int status;
-
-	status = lstat(token, &buffer);
-
-	if (status != 0)
-	{
-		printf("Invalid path!\n");
-	}
-	else if (setenv("PATH", token, 1) != 0)
+	if (setenv("PATH", token, 1) != 0)
 	{
 		printf("Error while setting the path!\n");
 	}
@@ -156,11 +155,12 @@ void setPath(char *token)
 The following function executes the commands. 
 Parameters: char** tokens and char* initPath.
 */
-void execute_command(char **tokens, char *initPath)
+int execute_command(char **tokens)
 {
 	pid_t pid;
 	int pid_status;
 	int exec_status;
+	int command_status = 0;
 
 	if (strcmp(tokens[0], "getpath") == 0)
 	{
@@ -207,9 +207,7 @@ void execute_command(char **tokens, char *initPath)
 		{
 			// Fork error
 			printf("Fork Failed\n");
-			setPath(initPath);
-
-			exit(1);
+			command_status = 1;
 		}
 		else if (pid == 0)
 		{
@@ -218,7 +216,7 @@ void execute_command(char **tokens, char *initPath)
 			if (exec_status < 0)
 			{
 				perror(tokens[0]);
-				exit(2);
+				command_status = 2;
 			}
 		}
 		else
@@ -228,6 +226,8 @@ void execute_command(char **tokens, char *initPath)
 				;
 		}
 	}
+
+	return command_status;
 }
 
 /*
