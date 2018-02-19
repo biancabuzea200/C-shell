@@ -6,7 +6,9 @@
 #include <sys/wait.h>
 #include <sys/stat.h>
 
-#define MAXCHAR 512
+#define MAXCHAR 512 
+#define MAX_COMMAND_LENGHT 128
+#define HISTORY_COUNT 20
 
 void readInput(char **tokens);
 void setToHome();
@@ -15,11 +17,16 @@ void printPath();
 int execute_command(char **tokens);
 int getNumberOfTokens(char **tokens);
 void wrongNumOfTokensError(char *command);
+int history (char *history[] , int current);
+int clear_history( char *history[]);
+int display_history();
+
 
 int main()
 {
 	char **input;
 	char *path;
+
 
 	// Print PATH environment variable
 	printf("PATH IS -> ");
@@ -271,4 +278,102 @@ Parameters: char* command
 void wrongNumOfTokensError(char *command)
 {
 	printf("Error! Invalid number of arguments for '%s'\n", command);
+}r 
+
+
+/*
+The following function displays the history , prints history number which starts from one.( current points to the oldest enty)
+*/
+int history ( char *history[] , int current) {
+
+int i = current;
+int history_number = 1;
+
+do {
+	if (history[i]){
+
+	printf("%4d %s\n" , history_number , history[i])
+	history_number++;
+	
+	}
+	
+	i = ( i + 1) % HISTORY_COUNT;
+	
+} while ( i != current );
+	return 0 ;
+
+
 }
+
+/*
+The following function frees all alocated history entries
+*/
+
+
+int clear_history(char *history[])
+{
+        int i;
+
+        for (i = 0; i < HISTORY_COUNT; i++) {
+                free(history[i]);
+                history[i] = NULL;
+        }
+
+        return 0;
+}
+
+
+
+/* This function Main Function gets user input until user enters `quit`
+    History command displays the list of previous entries
+   `hc` command clears the history
+
+*/
+
+
+int display_history()
+{
+        char cmd[MAX_COMMAND_LENGHT];
+        char *history[HISTORY_COUNT];
+        int i, current = 0;
+
+        for (i = 0; i < HISTORY_COUNT; i++)
+                history[i] = NULL;
+
+        while (1) {
+                printf("user@shell # ");
+
+                fgets(cmd, MAX_COMMAND_LENGHT, stdin);
+
+                
+                if (cmd[strlen(cmd) - 1] == '\n')
+                        cmd[strlen(cmd) - 1] = '\0';
+
+               
+                free(history[current]);
+
+                history[current] = strdup(cmd);
+
+                current = (current + 1) % HISTORY_COUNT;
+		//still need to add the <no> and !<no> and !-<no>
+
+                if (strcmp(cmd, "history") == 0)
+                        history(history, current);
+                else if (strcmp(cmd, "hc") == 0)
+                        clear_history(history);
+                else if (strcmp(cmd, "quit") == 0)
+                        break;
+        } clear_history(history);
+
+        return 0;
+}
+
+
+
+
+
+
+
+
+
+
