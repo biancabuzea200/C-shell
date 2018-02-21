@@ -6,9 +6,10 @@
 #include <sys/wait.h>
 #include <sys/stat.h>
 
-#define MAXCHAR 512 
+#define MAXCHAR 512
 #define MAX_COMMAND_LENGHT 128
 #define HISTORY_COUNT 20
+#define HISTORY_PATH ".hist_list"
 
 void readInput(char **tokens);
 void setToHome();
@@ -17,15 +18,22 @@ void printPath();
 int execute_command(char **tokens);
 int getNumberOfTokens(char **tokens);
 void wrongNumOfTokensError(char *command);
-int history (char *history[] , int current);
+//int history (char *history[] , int current);
 int clear_history( char *history[]);
 int display_history();
 
+void loadHistory();
+void saveHistory();
+void printHistory();
+char history[20][MAXCHAR];
 
 int main()
 {
 	char **input;
 	char *path;
+
+	loadHistory();
+	printHistory();
 
 
 	// Print PATH environment variable
@@ -33,7 +41,7 @@ int main()
 	printPath();
 
 	// Save the PATH to restore it later
-	path = strdup(getenv("PATH")); 
+	path = strdup(getenv("PATH"));
 
 	// Set the current direcotry to home
 	setToHome();
@@ -49,6 +57,41 @@ int main()
 	return 0;
 }
 
+void loadHistory()
+{
+	FILE *hist = fopen(HISTORY_PATH, "r");
+	for(int i = 0; i<20; i++)
+	{
+			if(feof(hist))
+			{
+				break;
+			}
+			fgets(history[i], MAXCHAR, hist);
+	}
+	fclose(hist);
+}
+
+void saveHistory()
+{
+	FILE *hist = fopen(HISTORY_PATH, "w");
+	for(int i = 0; i++; i<20)
+	{
+		if(strcmp(history[i], "") == 0) break;
+		fprintf(hist, "%s", history[i]);
+	}
+	fclose(hist);
+	printf("History saved!\n");
+}
+
+void printHistory()
+{
+	for(int i = 0; i<20; i++)
+	{
+		if(strcmp(history[i], "") == 0) break;
+		printf("%d %s", i+1, history[i]);
+	}
+}
+
 /*
 Reads, parses the user input and returns the program return status
 Parameters: char tokens[MAXCHAR]
@@ -59,7 +102,7 @@ void readInput(char **tokens)
 	char input[MAXCHAR] = "";
 	const char delimiters[13] = " \t<>|;&\n";
 	char *token = "";
-	
+
 	char c, *systemsymbol = "$ ";
 
 	tokens = (char **)malloc(50 * sizeof(char *));
@@ -74,6 +117,7 @@ void readInput(char **tokens)
 
 		if (feof(stdin)){
 			printf("\n");
+			saveHistory();
 			return;
 		}
 
@@ -101,7 +145,7 @@ void readInput(char **tokens)
 			if (strcmp(token, "\n") != 0)
 			{
 				tokens[token_cnt] = strdup(token);
-				
+
 				token_cnt++;
 			}
 			token = strtok(NULL, delimiters);
@@ -111,7 +155,7 @@ void readInput(char **tokens)
 		if (tokens[0] != NULL)
 		{
 			if(execute_command(tokens)== -1)
-			{	
+			{
 			break;
 			}
 		}
@@ -150,13 +194,13 @@ Parameters: char* token
 */
 void setPath(char *token)
 {
-	
-	
+
+
 		if (setenv("PATH",token,1) != 0)
 		{
 		printf("Error while setting the path!\n");
 		}
-	
+
 }
 
 /*
@@ -168,7 +212,7 @@ int execute_command(char **tokens)
 	pid_t pid;
 	int pid_status;
 	const char exit_command[6] = "exit";
-	
+
 	if (strcmp(tokens[0], "getpath") == 0)
 	{
 		if (getNumberOfTokens(tokens) == 1)
@@ -210,19 +254,18 @@ int execute_command(char **tokens)
 		}
 	}
 
-	else if(strcmp(exit_command, tokens[0]) == 0){
-
-	 	if(getNumberOfTokens(tokens) > 1){
-		printf("Invalid number of parameters for exit command!\n");
-		return 0;
+	else if(strcmp(exit_command, tokens[0]) == 0)
+	{
+		saveHistory();
+	 	if(getNumberOfTokens(tokens) > 1)
+		{
+			printf("Invalid number of parameters for exit command!\n");
+			return 0;
 		}
 		else
 		{
-		 return -1;
-		}		
-		
-		
-			
+		 	return -1;
+		}
 	}
 
 	else
@@ -240,10 +283,10 @@ int execute_command(char **tokens)
 		{
 			// Child process
 			execvp(tokens[0], tokens);
-			
+
 				perror(tokens[0]);
 				exit(2);
-			
+
 		}
 		else
 		{
@@ -251,7 +294,7 @@ int execute_command(char **tokens)
 			while (wait(&pid_status) != pid)
 				;
 		}
-	
+
 	}
 	return 0;
 }
@@ -278,12 +321,12 @@ Parameters: char* command
 void wrongNumOfTokensError(char *command)
 {
 	printf("Error! Invalid number of arguments for '%s'\n", command);
-}r 
+}
 
 
 /*
 The following function displays the history , prints history number which starts from one.( current points to the oldest enty)
-*/
+
 int history ( char *history[] , int current) {
 
 int i = current;
@@ -294,11 +337,11 @@ do {
 
 	printf("%4d %s\n" , history_number , history[i])
 	history_number++;
-	
+
 	}
-	
+
 	i = ( i + 1) % HISTORY_COUNT;
-	
+
 } while ( i != current );
 	return 0 ;
 
@@ -307,7 +350,7 @@ do {
 
 /*
 The following function frees all alocated history entries
-*/
+
 
 
 int clear_history(char *history[])
@@ -328,7 +371,7 @@ int clear_history(char *history[])
     History command displays the list of previous entries
    `hc` command clears the history
 
-*/
+
 
 
 int display_history()
@@ -345,11 +388,11 @@ int display_history()
 
                 fgets(cmd, MAX_COMMAND_LENGHT, stdin);
 
-                
+
                 if (cmd[strlen(cmd) - 1] == '\n')
                         cmd[strlen(cmd) - 1] = '\0';
 
-               
+
                 free(history[current]);
 
                 history[current] = strdup(cmd);
@@ -367,13 +410,4 @@ int display_history()
 
         return 0;
 }
-
-
-
-
-
-
-
-
-
-
+*/
