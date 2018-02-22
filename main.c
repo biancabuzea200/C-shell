@@ -22,14 +22,16 @@ void loadHistory();
 void saveHistory();
 void printHistory();
 char history[20][MAXCHAR];
+int history_next;
 
 int main()
 {
     char **input;
     char *path;
 
+    history_next = 0;
     loadHistory();
-    printHistory();
+    //printHistory();
 
     // Print PATH environment variable
     printf("PATH IS -> ");
@@ -58,13 +60,11 @@ Loads the history from .hist_list into the history data structure.
 void loadHistory()
 {
     FILE *hist = fopen(HISTORY_PATH, "r");
-    for(int i = 0; i<20; i++)
+    int i = 19;
+    while(!feof(hist))
     {
-        if(feof(hist))
-        {
-            break;
-        }
-        fgets(history[i], MAXCHAR, hist);
+      fgets(history[i], MAXCHAR, hist);
+      i--;
     }
     fclose(hist);
 }
@@ -75,10 +75,15 @@ Saves the history data structure to .hist_list
 void saveHistory()
 {
     FILE *hist = fopen(HISTORY_PATH, "w");
-    for(int i = 0; i++; i<20)
+    for(int i = history_next-1; i>=0; i--)
     {
-        if(strcmp(history[i], "") == 0) break;
+        if(strcmp(history[i], "") == 0) continue;
         fprintf(hist, "%s", history[i]);
+    }
+    for(int i = 19; i>=history_next; i--)
+    {
+      if(strcmp(history[i], "") == 0) continue;
+      fprintf(hist, "%s", history[i]);
     }
     fclose(hist);
     printf("History saved!\n");
@@ -89,11 +94,32 @@ Prints the contents of the history data structure.
 */
 void printHistory()
 {
-    for(int i = 0; i<20; i++)
+    int j = 1;
+    for(int i = history_next-1; i>=0; i--)
     {
-        if(strcmp(history[i], "") == 0) break;
-        printf("%d %s", i+1, history[i]);
+        if(strcmp(history[i], "") == 0) continue;
+        printf("%d %s", j, history[i]);
+        j++;
     }
+    for(int i = 19; i>=history_next; i--)
+    {
+      if(strcmp(history[i], "") == 0) continue;
+      printf("%d %s", j, history[i]);
+      j++;
+    }
+}
+
+/*
+Saves cmd to history.
+*/
+void saveCmd(char *cmd)
+{
+  memcpy(history[history_next], cmd, MAXCHAR);
+  history_next++;
+  if(history_next == 20)
+  {
+    history_next = 0;
+  }
 }
 
 /*
@@ -118,6 +144,8 @@ void readInput(char **tokens)
         printf("%s", systemsymbol);
 
         fgets(input, MAXCHAR, stdin);
+
+        saveCmd(input);
 
         if (feof(stdin)) {
             printf("\n");
@@ -257,7 +285,15 @@ int execute_command(char **tokens)
             wrongNumOfTokensError("cd");
         }
     }
-
+    else if(strcmp(tokens[0], "history") == 0)
+    {
+      printf("History\n");
+      printHistory();
+    }
+    else if(strcmp(tokens[0], "next") == 0)
+    {
+      printf("%d/n", history_next);
+    }
     else if(strcmp(exit_command, tokens[0]) == 0)
     {
         saveHistory();
