@@ -80,14 +80,22 @@ void readInput(char **tokens)
 	printf("Tokens array successfully created!\n");
 
 	while (1)
+<<<<<<< HEAD
 	
 	{	command_cnt++;
+=======
+	{	
+		command_cnt++;
+>>>>>>> 0d18ea2621c0a5faaf9eb55cf1c7670983e9ed77
 		token_cnt = 0;
 		index = (index +1)%20;
 		
 		printf("%s", systemsymbol);
 
 		fgets(input, MAXCHAR, stdin);
+		
+		command1.command = strdup(input);
+		command1.counter = command_cnt;
 
 		if (feof(stdin))
 		{
@@ -130,20 +138,25 @@ void readInput(char **tokens)
 
 		if (tokens[0] != NULL)
 		{
-			if(execute_command(tokens)== -1)
+						
+			if(execute_command(tokens) == -1)
 				
 			break;
 			
 		}
+<<<<<<< HEAD
 	strcpy(command1->command,&tokens);
 	
 	command1.counter = command_cnt;
 	if(command_cnt>20)
+=======
+		
+	if(command_cnt>19)
+>>>>>>> 0d18ea2621c0a5faaf9eb55cf1c7670983e9ed77
 	history[(command_cnt-1)%20] = command1; 
 	
 	else
 	history[command_cnt-1] = command1;
-	
   }
 }
 
@@ -253,16 +266,31 @@ int execute_command(char **tokens)
 		
 			
 	}
+	// this works
 	else if(strcmp("history", tokens[0]) == 0){
 		if(numberOfCommands() == 0)
 		printf("There are no commands stored!");
 		
-		else	
+		else
 		display_history();
-			
+		
+					
 	}
-	
+	else if(strcspn(tokens[0],"!") == 0){
 
+		 if(strcmp("!!",tokens[0]) == 0){
+
+
+
+		}
+	
+		 if (strcmp("!-",tokens[0]) == 0){
+
+	
+		}
+
+	
+	}
 	else
 	{
 		pid = fork();
@@ -319,14 +347,13 @@ void wrongNumOfTokensError(char *command)
 
 
 /*
-The following function displays the history , prints history number which starts from one.( current points to the oldest enty)
+The following function displays the history , prints history number which starts from one.
 */
 void display_history () {
 
-
 int history_number = 1;
 
-while(sizeof(history[history_number-1].command) != 0)
+while(history[history_number-1].counter)
 {
 	printf("%4d %s\n" , history_number , history[history_number-1].command);
 	history_number++;
@@ -335,7 +362,7 @@ while(sizeof(history[history_number-1].command) != 0)
 	
 }
 
-
+//this works 
 int numberOfCommands(){
 
 int i = 0;
