@@ -71,16 +71,19 @@ void readInput(char **tokens)
 	char input[MAXCHAR] = "";
 	const char delimiters[13] = " \t<>|;&\n";
 	char *token = "";
-	history_command command1;//structure instance
+	history_command command1 = NULL;//structure instance
 	char c, *systemsymbol = "$ ";
-	int command_cnt = 0; // index in the history array
+	int command_cnt = 0; 
+	int index = 0; //index in the array
 	
 	tokens = (char **)malloc(50 * sizeof(char *));
 	printf("Tokens array successfully created!\n");
 
 	while (1)
+	
 	{	command_cnt++;
 		token_cnt = 0;
+		index = (index +1)%20;
 		
 		printf("%s", systemsymbol);
 
@@ -132,7 +135,7 @@ void readInput(char **tokens)
 			break;
 			
 		}
-	command1.command = token;
+	strcpy(command1->command,&tokens);
 	
 	command1.counter = command_cnt;
 	if(command_cnt>20)
