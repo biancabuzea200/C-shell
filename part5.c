@@ -5,6 +5,7 @@
 #include <unistd.h>
 #include <sys/wait.h>
 #include <sys/stat.h>
+#include <ctype.h>
 
 #define MAXCHAR 512
 #define HISTORY_COUNT 20
@@ -30,6 +31,8 @@ void wrongNumOfTokensError(char *command);
 int numberOfCommands();
 //int clear_history( char *history[]);
 void display_history();
+char** parseHistory(char* history);
+int isNumber(char* string);
 
 history_command history[20];
 
@@ -71,7 +74,7 @@ void readInput(char **tokens)
 	char input[MAXCHAR] = "";
 	const char delimiters[13] = " \t<>|;&\n";
 	char *token = "";
-	history_command command1 = NULL;//structure instance
+	history_command command1;//structure instance
 	char c, *systemsymbol = "$ ";
 	int command_cnt = 0; 
 	int index = 0; //index in the array
@@ -80,13 +83,13 @@ void readInput(char **tokens)
 	printf("Tokens array successfully created!\n");
 
 	while (1)
-<<<<<<< HEAD
+
 	
-	{	command_cnt++;
-=======
+
+
 	{	
 		command_cnt++;
->>>>>>> 0d18ea2621c0a5faaf9eb55cf1c7670983e9ed77
+
 		token_cnt = 0;
 		index = (index +1)%20;
 		
@@ -136,6 +139,13 @@ void readInput(char **tokens)
 		}
 		tokens[token_cnt] = NULL;
 
+		if(command_cnt>19)
+		history[(command_cnt-1)%20] = command1; 
+	
+		else
+		history[command_cnt-1] = command1;
+
+
 		if (tokens[0] != NULL)
 		{
 						
@@ -144,19 +154,9 @@ void readInput(char **tokens)
 			break;
 			
 		}
-<<<<<<< HEAD
-	strcpy(command1->command,&tokens);
 	
-	command1.counter = command_cnt;
-	if(command_cnt>20)
-=======
 		
-	if(command_cnt>19)
->>>>>>> 0d18ea2621c0a5faaf9eb55cf1c7670983e9ed77
-	history[(command_cnt-1)%20] = command1; 
 	
-	else
-	history[command_cnt-1] = command1;
   }
 }
 
@@ -276,21 +276,42 @@ int execute_command(char **tokens)
 		
 					
 	}
-	else if(strcspn(tokens[0],"!") == 0){
-
-		 if(strcmp("!!",tokens[0]) == 0){
-
-
-
+	else if(strcspn(tokens[0],"!") == 0)
+	{
+		if(getNumberOfTokens(tokens) != 2)
+		printf("Invalid number of arguments!\n");
+		
+		else if(atoi(tokens[1])>numberOfCommands())
+		{
+		printf("Invalid number of command! Enter a number from 1 to %d\n",numberOfCommands());
+		
 		}
-	
-		 if (strcmp("!-",tokens[0]) == 0){
+		else if(isNumber(tokens[1]) == 1){
 
-	
+		printf("Please provide a number from 1 to %d for the second argument!\n",numberOfCommands());
+		}		
+		
+		else
+		{
+		execute_command(parseHistory(history[atoi(tokens[1])-1].command));			
 		}
-
 	
 	}
+		//Executes last command in history.
+	else if(strcmp("!!",tokens[0]) == 0)
+	{
+		
+
+
+		}
+		//Executes Last command - a number
+	else if (strcmp("!-",tokens[0]) == 0){
+		
+	
+		}
+
+	
+	
 	else
 	{
 		pid = fork();
@@ -374,6 +395,48 @@ return i;
 
 }
 
+char** parseHistory(char* history)
+{
+
+	int token_cnt = 0; // number of tokens
+	const char delimiters[13] = " <>\n";
+	char *token = "";
+	char **parsedHistory;
+	parsedHistory = (char **)malloc(20 * sizeof(char *));
+
+		token = strtok(history, delimiters);
+
+		while (token != NULL)
+		{
+
+			if (strcmp(token, "\n") != 0)
+			{
+				parsedHistory[token_cnt] = strdup(token);
+				
+				token_cnt++;
+			}
+			token = strtok(NULL, delimiters);
+		}
+		parsedHistory[token_cnt] = NULL;
+
+return parsedHistory;
+}
+
+
+int isNumber(char* string){
+
+int length = strlen(string);
+
+for (int j = 0; j<length-1; j++){
+
+	if (!isdigit(string[j]))
+	return 1;
+
+
+}
+return 0;
+
+}
 
 
 
