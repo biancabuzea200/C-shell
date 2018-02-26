@@ -33,6 +33,7 @@ int numberOfCommands();
 void display_history();
 char** parseHistory(char* history);
 int isNumber(char* string);
+int lastCommand();
 
 history_command history[20];
 
@@ -60,7 +61,7 @@ int main()
 	setPath(path);
 	printf("PATH IS -> ");
 	printPath();
-
+	printf("INDEX OF LAST COMMAND IS: %d\n",lastCommand());
 	return 0;
 }
 
@@ -83,19 +84,21 @@ void readInput(char **tokens)
 	printf("Tokens array successfully created!\n");
 
 	while (1)
-
-	
-
-
 	{	
-		command_cnt++;
-
+		
 		token_cnt = 0;
-		index = (index +1)%20;
 		
 		printf("%s", systemsymbol);
 
 		fgets(input, MAXCHAR, stdin);
+		
+	
+		 if (strcspn(input,"!") != 0 )
+		{
+			command_cnt++;	
+			
+		}
+		
 		
 		command1.command = strdup(input);
 		command1.counter = command_cnt;
@@ -105,7 +108,6 @@ void readInput(char **tokens)
 			printf("\n");
 			return;
 		}
-
 		// Checks if the input is more than 512 symbols...
 		if (input[strlen(input) - 1] != '\n')
 		{
@@ -138,25 +140,17 @@ void readInput(char **tokens)
 			token = strtok(NULL, delimiters);
 		}
 		tokens[token_cnt] = NULL;
-
-		if(command_cnt>19)
-		history[(command_cnt-1)%20] = command1; 
-	
-		else
-		history[command_cnt-1] = command1;
-
-
-		if (tokens[0] != NULL)
-		{
-						
-			if(execute_command(tokens) == -1)
-				
-			break;
 			
-		}
-	
-		
-	
+		if (strcspn(tokens[0],"!") != 0)
+		{	
+							
+			history[(command_cnt-1)%20] = command1; 
+		}	
+		if (tokens[0] != NULL)
+		{						
+			if(execute_command(tokens) == -1)			
+			break;			
+		}	
   }
 }
 
@@ -191,14 +185,11 @@ The following function sets the Environment variable PATH
 Parameters: char* token
 */
 void setPath(char *token)
-{
-	
-	
+{	
 		if (setenv("PATH",token,1) != 0)
 		{
 		printf("Error while setting the path!\n");
-		}
-	
+		}	
 }
 
 /*
@@ -210,7 +201,8 @@ int execute_command(char **tokens)
 	pid_t pid;
 	int pid_status;
 	const char exit_command[6] = "exit";
-	
+	char commandNumber[2];
+
 	if (strcmp(tokens[0], "getpath") == 0)
 	{
 		if (getNumberOfTokens(tokens) == 1)
@@ -252,7 +244,8 @@ int execute_command(char **tokens)
 		}
 	}
 
-	else if(strcmp(exit_command, tokens[0]) == 0){
+	else if(strcmp(exit_command, tokens[0]) == 0)
+	{
 
 	 	if(getNumberOfTokens(tokens) > 1){
 		printf("Invalid number of parameters for exit command!\n");
@@ -262,56 +255,92 @@ int execute_command(char **tokens)
 		{
 		 return -1;
 		}		
-		
-		
-			
-	}
-	// this works
-	else if(strcmp("history", tokens[0]) == 0){
-		if(numberOfCommands() == 0)
-		printf("There are no commands stored!");
-		
-		else
-		display_history();
-		
 					
 	}
-	else if(strcspn(tokens[0],"!") == 0)
+	// this works
+	else if(strcmp("history", tokens[0]) == 0)
 	{
-		if(getNumberOfTokens(tokens) != 2)
-		printf("Invalid number of arguments!\n");
+		if(numberOfCommands() == 0)
+		printf("There are no commands stored!\n");
 		
-		else if(atoi(tokens[1])>numberOfCommands())
-		{
-		printf("Invalid number of command! Enter a number from 1 to %d\n",numberOfCommands());
-		
+		else
+		display_history();				
+	}
+	else if(strcspn(tokens[0],"!") == 0 && tokens[0][1] != '!' && tokens[0][1] != '-')
+	{			
+		if (strlen(tokens[0]) < 3)		
+		{ 
+		memmove(commandNumber,tokens[0]+1,1); 		
 		}
-		else if(isNumber(tokens[1]) == 1){
-
+		else
+		{ 
+		memmove(commandNumber,tokens[0]+1,2); 
+		}
+		
+		if(getNumberOfTokens(tokens) != 1)
+		{ 
+			printf("Invalid number of arguments!\n");
+		}	
+		else if(atoi(commandNumber) > numberOfCommands())
+		{
+		printf("Invalid number of command!\n");		
+		}
+		else if(isNumber(commandNumber) == 1)
+		{
 		printf("Please provide a number from 1 to %d for the second argument!\n",numberOfCommands());
 		}		
 		
 		else
 		{
-		execute_command(parseHistory(history[atoi(tokens[1])-1].command));			
+			if (strcmp(history[atoi(commandNumber)-1].command, "\n") != 0)		
+			execute_command(parseHistory(history[atoi(commandNumber)-1].command));			
 		}
 	
 	}
 		//Executes last command in history.
-	else if(strcmp("!!",tokens[0]) == 0)
-	{
+	else if(strcspn(tokens[0],"!") == 0 && tokens[0][1] == '!')
+	{	
+		execute_command(parseHistory(history[lastCommand()].command));
 		
-
-
-		}
+	}
 		//Executes Last command - a number
-	else if (strcmp("!-",tokens[0]) == 0){
+	else if (strcspn(tokens[0],"!") == 0 && tokens[0][1] == '-')
+		{
+			if (strlen(tokens[0]) < 4)		
+			{ 	
+				memmove(commandNumber,tokens[0]+2,1);
+				 		
+			}
+			else
+			{ 	
+				memmove(commandNumber,tokens[0]+2,2);
+				  
+			}
 		
-	
+			if(getNumberOfTokens(tokens) != 1)
+			{ 
+				printf("Invalid number of arguments!\n");
+			}	
+			else if(atoi(commandNumber) >= numberOfCommands())
+				{
+					printf("Invalid number of command!\n");		
+				}
+			else if(isNumber(commandNumber) == 1)
+				{
+					printf("Please provide a number from 1 to %d for the second argument!\n",numberOfCommands());
+				}		
+		
+			else
+			{
+				if (strcmp(history[atoi(commandNumber)-1].command, "\n") != 0)		
+				{	 			
+					if (lastCommand() - atoi(commandNumber) >= 0)					
+						execute_command(parseHistory(history[lastCommand() - atoi(commandNumber)].command));
+					else	
+						execute_command(parseHistory(history[20 - (atoi(commandNumber) - lastCommand())].command));								
+				}			
+			}	
 		}
-
-	
-	
 	else
 	{
 		pid = fork();
@@ -365,39 +394,34 @@ void wrongNumOfTokensError(char *command)
 {
 	printf("Error! Invalid number of arguments for '%s'\n", command);
 } 
-
-
 /*
 The following function displays the history , prints history number which starts from one.
 */
-void display_history () {
-
+void display_history () 
+{
 int history_number = 1;
-
 while(history[history_number-1].counter)
 {
 	printf("%4d %s\n" , history_number , history[history_number-1].command);
-	history_number++;
-	
-	}
-	
+	history_number++;	
+	}	
 }
 
 //this works 
-int numberOfCommands(){
-
+int numberOfCommands()
+{
 int i = 0;
-while(history[i].counter != 0){
-
+while(history[i].counter != 0)
+{
  i++;
 }
 return i;
-
 }
-
+/*
+This parses History inputs.
+*/
 char** parseHistory(char* history)
 {
-
 	int token_cnt = 0; // number of tokens
 	const char delimiters[13] = " <>\n";
 	char *token = "";
@@ -421,8 +445,9 @@ char** parseHistory(char* history)
 
 return parsedHistory;
 }
-
-
+/*
+Checks if a given string is a number.
+*/
 int isNumber(char* string){
 
 int length = strlen(string);
@@ -431,13 +456,23 @@ for (int j = 0; j<length-1; j++){
 
 	if (!isdigit(string[j]))
 	return 1;
-
-
 }
 return 0;
-
 }
-
-
-
-
+/*
+Returns the index of the last command in history array.
+*/
+int lastCommand()
+{
+int index = 0;
+int max = 0;
+for (int cnt=0; cnt < 20; cnt++)
+{
+	if (history[cnt].counter > max)
+	{
+		max = history[cnt].counter;
+		index = cnt;	
+	} 
+}	
+return index;
+}
