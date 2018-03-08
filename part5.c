@@ -28,12 +28,12 @@ int getNumberOfTokens(char **tokens);
 void wrongNumOfTokensError(char *command);
 int numberOfCommands(history_command* history);
 void display_history(history_command* history);
-void parseHistory(char* history_invocation,history_command* history);
+int parseHistory(char* history_invocation,history_command* history);
 int isNumber(char* string);
 int lastCommand(history_command* history);
 void saveHistory(history_command* history);
 void loadHistory(history_command* history);
-void removeWhitespaces(char *input);
+
 
 int main()
 {
@@ -44,7 +44,7 @@ int main()
 	char *path;
 	
 	// Print PATH environment variable
-	printf("PATH IS -> ");printPath();
+	
 
 	// Save the PATH to restore it later
 	path = strdup(getenv("PATH")); 
@@ -286,11 +286,11 @@ int execute_command(char **tokens,history_command* history)
 		
 		else
 		{
-			if (strcmp(history[atoi(commandNumber)-1].command, "\n") != 0)		
-				parseHistory(history[atoi(commandNumber)-1].command,history);
-			
-			if(strcmp(history[atoi(commandNumber)-1].command, "exit"))
-				return -1;		
+			if (strcmp(history[atoi(commandNumber)-1].command, "\n") != 0){
+	
+				if(parseHistory(history[atoi(commandNumber)-1].command,history) == -1)
+					return -1;
+				}	
 		}
 	
 	}
@@ -309,12 +309,12 @@ int execute_command(char **tokens,history_command* history)
 				
 				if (strcmp(history[lastCommand(history)].command, "\n") != 0){
 				
-				parseHistory(history[lastCommand(history)].command,history);	
+					if(parseHistory(history[lastCommand(history)].command,history) == -1)
+						return -1;	
 
 				}
 			
-				if(strcmp(history[atoi(commandNumber)-1].command, "exit"))
-				return -1;	
+					
 			}
 			else 
 			{
@@ -349,25 +349,28 @@ int execute_command(char **tokens,history_command* history)
 			{ 
 				if (strcmp(history[atoi(commandNumber)-1].command, "\n") != 0)
 				{			 			
-					if (lastCommand(history) - atoi(commandNumber) + 1 > 0)	{				
-					parseHistory(history[lastCommand(history)  - atoi(commandNumber) +1].command,history);
-						if(strcmp(history[atoi(commandNumber)-1].command, "exit"))
+					if (lastCommand(history) - atoi(commandNumber) + 1 > 0)	{
+						
+									
+						if(parseHistory(history[lastCommand(history)  - atoi(commandNumber) +1].command,history) == -1)
 							return -1;
+						
 
 					}
 			
 					
 					else if (lastCommand(history) - atoi(commandNumber) + 1 == 0){
-					parseHistory(history[0].command,history);
+						if(parseHistory(history[0].command,history) == -1)
+						return -1;
 
-						if(strcmp(history[atoi(commandNumber)-1].command, "exit"))
-							return -1;
+					
 					}
 					else
 					{	
-					parseHistory(history[20 - (atoi(commandNumber) - lastCommand(history))+1].command,history);
-						if(strcmp(history[atoi(commandNumber)-1].command, "exit"))
-							return -1;
+					if(parseHistory(history[20 - (atoi(commandNumber) - lastCommand(history))+1].command,history) == -1)
+					return -1;
+					
+						
 					}
 				}											
 			}	
@@ -446,9 +449,6 @@ int numberOfCommands(history_command* history)
 {
 
 int i = 0;
-
-printf("COMMAND LENGTH IS:%lu\n",strlen(history[i].command));
-
 while(strlen(history[i].command) > 0 && i < 20)
 { 
 	i++; 
@@ -459,7 +459,7 @@ return i;
 /*
 This parses History inputs.
 */
-void parseHistory(char* history_invocation,history_command* history)
+int parseHistory(char* history_invocation,history_command* history)
 {
 	int token_cnt = 0; // number of tokens
 	char* history1 = strdup(history_invocation);
@@ -482,9 +482,11 @@ void parseHistory(char* history_invocation,history_command* history)
 		parsedHistory[token_cnt] = NULL;
 		if (parsedHistory[0] != NULL)
 		{						
-			execute_command(parsedHistory,history);
+			if(execute_command(parsedHistory,history) == -1)
+					return -1;
 									
-		}	
+		}
+	return 0;	
 }
 
 /*
@@ -537,15 +539,15 @@ void loadHistory(history_command* history)
 		fscanf(hist,"%s",cnt);
 		counter = atoi(cnt);
 		
+		fgetc(hist);
 		fgets(input,MAXCHAR,hist);
 		
 	
-		removeWhitespaces(input);
+		//removeWhitespaces(input);
 					
 		history[(counter-1)%20].counter = counter;
 		strcpy(history[(counter-1)%20].command,input);		
 	}
-	printf("INDEX FOR LAST COMMAND IS : %d",lastCommand(history));
     	fclose(hist);
 }
 
@@ -565,15 +567,6 @@ int index = numberOfCommands(history);
 }
 
 
-void removeWhitespaces(char *input)
-{   
-    int count = 0;
 
-    for (int i = 0; input[i]; i++)
-        //if (input[i] != ' ' && i != 0)
-    {        input[count++] = input[i]; }
-                                   
-    input[count] = '\0';
-}
 
 
