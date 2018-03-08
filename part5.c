@@ -22,7 +22,7 @@ char command[MAXCHAR];
 void readInput(char **tokens,history_command* history);
 void setToHome();
 void setPath(char *token);
-void printPath();
+void printPathz();
 int execute_command(char **tokens,history_command* history);
 int getNumberOfTokens(char **tokens);
 void wrongNumOfTokensError(char *command);
@@ -261,8 +261,15 @@ int execute_command(char **tokens,history_command* history)
 		display_history(history);				
 	}
 	else if(tokens[0][0] == '!' && tokens[0][1] != '!' && tokens[0][1] != '-')
-	{			
-		if (strlen(tokens[0]) < 3)		
+	{	
+		
+
+		if(strlen(tokens[0]) > 3){
+		printf("Please provide a number from 1 to %d for the second argument!\n",numberOfCommands(history));
+		return 0;
+		}
+		
+		else if (strlen(tokens[0]) < 3)		
 		{ 
 		memmove(commandNumber,tokens[0]+1,1); 		
 		}
@@ -271,15 +278,17 @@ int execute_command(char **tokens,history_command* history)
 		memmove(commandNumber,tokens[0]+1,2); 
 		}
 		
+		
 		if(getNumberOfTokens(tokens) != 1)
 		{ 
-			printf("Number given is out of range!\n");
+			printf("Invalid number of arguments!\n");
 		}	
 		else if(atoi(commandNumber) > numberOfCommands(history))
 		{
-		printf("Invalid number of command!\n");		
+		printf("Invalid number of command!\n");	
+			
 		}
-		else if(isNumber(commandNumber) == 1)
+		else if(isNumber(commandNumber) == 1 )
 		{
 		printf("Please provide a number from 1 to %d for the second argument!\n",numberOfCommands(history));
 		}		
@@ -299,9 +308,15 @@ int execute_command(char **tokens,history_command* history)
 	{	
 		if(strlen(tokens[0]) != 2)
 			{
-				printf("Invalid number of arguments!\n");
+				printf("Invalid format for the function !!.\n");
+				return 0;
 			}
 
+		if(getNumberOfTokens(tokens) != 1)
+		{ 
+			printf("Invalid number of arguments!\n");
+			return 0;
+		}
 		else 
 		{
 			if(numberOfCommands(history) != 0 )
@@ -324,8 +339,13 @@ int execute_command(char **tokens,history_command* history)
 	}
 		//Executes Last command - a number
 	      else if (tokens[0][0] == '!' && tokens[0][1] == '-')
-		{				
-			if (strlen(tokens[0]) < 4)		
+		{	
+			if(strlen(tokens[0]) > 4){
+				printf("Please provide a number from 1 to %d for the second argument!\n",numberOfCommands(history));
+				return 0;
+				}
+			
+			else if (strlen(tokens[0]) < 4)		
 			{ 	
 				memmove(commandNumber,tokens[0]+2,1);		 		
 			}
@@ -339,7 +359,7 @@ int execute_command(char **tokens,history_command* history)
 			}	
 			else if(atoi(commandNumber) > numberOfCommands(history) || atoi(commandNumber) == 0)
 				{
-					printf("Number given is out of range!\n");		
+					printf("Please provide a number from 1 to %d for the second argument!\n",numberOfCommands(history));		
 				}
 			else if(isNumber(commandNumber) == 1)
 				{
