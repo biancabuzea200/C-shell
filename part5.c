@@ -22,7 +22,7 @@ char command[MAXCHAR];
 void readInput(char **tokens,history_command* history);
 void setToHome();
 void setPath(char *token);
-void printPathz();
+void printPath();
 int execute_command(char **tokens,history_command* history);
 int getNumberOfTokens(char **tokens);
 void wrongNumOfTokensError(char *command);
@@ -57,13 +57,12 @@ int main()
 	readInput(input,history);
 
 	
-
+	saveHistory(history);
 	
 	// Restore the original PATH
 	setPath(path);
 	
-	printPath();
-	saveHistory(history);
+	
 
 	return 0;
 }
@@ -529,20 +528,20 @@ Returns the index of the last command in history array.
 */
 int lastCommand(history_command* history)
 {
-int index = 0;
-int cnt = 0;
-int max = 0;
-while(history[cnt].counter != 0)
-{
+	int index = 0;
+	int cnt = 0;
+	int max = 0;
+	while(history[cnt].counter != 0)
+	{
 	
 	if (history[cnt].counter > max && cnt < 20)
 	{
 		max = history[cnt].counter;
 		index = cnt;	
 	} 
-cnt++;
-}	
-return index;
+	cnt++;
+	}	
+	return index;
 }
 
 
@@ -551,38 +550,69 @@ void loadHistory(history_command* history)
 	FILE *hist = fopen(HISTORY_PATH, "r");
 	char input[MAXCHAR] = "";
     	char cnt[100];
+	int whitespace;
 	int counter;
-		
-	while(!feof(hist))
-	{
-		
-		fscanf(hist,"%s",cnt);
-		counter = atoi(cnt);
-		
-		fgetc(hist);
-		fgets(input,MAXCHAR,hist);
-		
 	
-		//removeWhitespaces(input);
-					
-		history[(counter-1)%20].counter = counter;
-		strcpy(history[(counter-1)%20].command,input);		
+	if(hist == NULL)
+	{
+	printf("Failed to open the file .hist_list! \n ");
 	}
-    	fclose(hist);
+	else
+	{	
+		while(!feof(hist))
+		{
+			
+			fscanf(hist,"%s",cnt);
+			counter = atoi(cnt);
+			if(counter == 0)
+			{
+				printf("Invalid format of .hist_list file!\n");
+				hist = fopen(HISTORY_PATH,"w");
+				//fclose(hist);
+				break;
+			}
+			
+			
+			//fgetc used to take the space between the counter and the command
+			whitespace = fgetc(hist);
+			
+			if(whitespace != 32 && whitespace != -1)
+			{
+				printf("Invalid format of .hist_list file!\n");
+				hist = fopen(HISTORY_PATH,"w");
+				//fclose(hist);
+				break;
+			}
+			fgets(input,MAXCHAR,hist);		
+			history[(counter-1)%20].counter = counter;
+			strcpy(history[(counter-1)%20].command,input);		
+		}
+	
+    		fclose(hist);
+	}
 }
 
 
 void saveHistory(history_command* history)
 {
-int history_number ;
-int index = numberOfCommands(history);	
+	int history_number ;
+	int index = numberOfCommands(history);
+	setToHome();	
 	FILE *hist = fopen(HISTORY_PATH,"w");
 	
-	for (history_number=1; history_number <= index; history_number ++)
+	if(hist == NULL)
+	{
+		printf("Failed to open the file .hist_list! \n ");
+	}
+	else
+	{
+		
+		for (history_number=1; history_number <= index; history_number ++)
 		{	
 			fprintf(hist, "%d %s", history[history_number-1].counter, history[history_number-1].command);		
 		}  
-    fclose(hist);
+    		fclose(hist);
+	}
    
 }
 
