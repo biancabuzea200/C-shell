@@ -280,11 +280,12 @@ int execute_command(char **tokens,history_command* history)
 		
 		if(getNumberOfTokens(tokens) != 1)
 		{ 
-			printf("Invalid number of arguments!\n");
+			printf("Invalid number of arguments!, please provide a number from 1 to %d for the second argument!\n", 			numberOfCommands(history));
 		}	
 		else if(atoi(commandNumber) > numberOfCommands(history))
 		{
-		printf("Invalid number of command!\n");	
+		printf("Invalid number of command!,please provide a number from 1 to %d for the second argument!\n",
+			numberOfCommands(history)));	
 			
 		}
 		else if(isNumber(commandNumber) == 1 )
@@ -302,12 +303,15 @@ int execute_command(char **tokens,history_command* history)
 		}
 	
 	}
-		//Executes last command in history.
+
+
+
+	//Executes last command in history.
 	else if(tokens[0][0] == '!' && tokens[0][1] == '!')
 	{	
 		if(strlen(tokens[0]) != 2)
 			{
-				printf("Invalid format for the function !!.\n");
+				printf("Invalid format for the function !!. The function !! will excecute the last command in history \n");
 				return 0;
 			}
 
@@ -376,6 +380,9 @@ int execute_command(char **tokens,history_command* history)
 						
 
 					}
+					
+
+
 			
 					
 					else if (lastCommand(history) - atoi(commandNumber) + 1 == 0){
@@ -394,6 +401,14 @@ int execute_command(char **tokens,history_command* history)
 				}											
 			}	
 		}
+
+	else if (tokens[0][0] == '!'){
+	printf ("invalid format of argument! Either use !! or !-number \n");
+	return 0;
+	}
+	
+
+
 	else
 	{
 		
