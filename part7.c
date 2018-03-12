@@ -9,17 +9,22 @@
 
 #define MAXCHAR 512
 #define HISTORY_COUNT 20
+#define ALIASES_COUNT 10
 #define HISTORY_PATH ".hist_list"
 
 typedef struct history_command
 {
-
 int counter;
 char command[MAXCHAR];
-
 }history_command;
 
-void readInput(char **tokens,history_command* history);
+typedef struct aliases
+{
+char alias[MAXCHAR];
+char value[MAXCHAR];
+}aliases_mapping;
+
+void readInput(char **tokens,history_command* history,aliases_mapping* aliases);
 void setToHome();
 void setPath(char *token);
 void printPath();
@@ -33,22 +38,28 @@ int isNumber(char* string);
 int lastCommand(history_command* history);
 void saveHistory(history_command* history);
 void loadHistory(history_command* history);
+int isAlias(char* line,aliases_mapping aliases[ALIASES_COUNT]);
+char* substring(char line[MAXCHAR],int index1,int index2);
 
 int main()
 {	
 	char **input;
-	history_command history[20];	
+	history_command history[HISTORY_COUNT];
+	aliases_mapping aliases[ALIASES_COUNT];	
 	char *path;
-	
 	// Save the PATH to restore it later
 	path = strdup(getenv("PATH")); 
+
+	strcpy(aliases[0].value,"ls . . .");
+	strcpy(aliases[0].alias,"dd");
+	
 
 	// Set the current direcotry to home
 	setToHome();
 	
 	loadHistory(history);	
 	// Read the input from the user
-	readInput(input,history);
+	readInput(input,history,aliases);
 
 	saveHistory(history);
 	
@@ -62,7 +73,7 @@ int main()
 Reads, parses the user input and returns the program return status
 Parameters: char tokens[MAXCHAR]
 */
-void readInput(char **tokens,history_command* history)
+void readInput(char **tokens,history_command* history,aliases_mapping* aliases)
 {
 	int token_cnt = 0; // number of tokens
 	char input[MAXCHAR] = "";	
@@ -70,9 +81,8 @@ void readInput(char **tokens,history_command* history)
 	char *token = "";
 	char c, *systemsymbol = "$";
 	int command_cnt = history[lastCommand(history)].counter; 
-	
 	int index = 0; //index in the array
-	
+	char* alias;
 	tokens = (char **)malloc(50 * sizeof(char *));
 	
 	while (1)
@@ -85,7 +95,6 @@ void readInput(char **tokens,history_command* history)
 		if (feof(stdin))
 		{
 			printf("\n");
-		
 			return;
 		}
 		// Checks if the input is more than 512 symbols...
@@ -97,22 +106,44 @@ void readInput(char **tokens,history_command* history)
 			while ((c = getchar()) != '\n' && c != EOF)
 			{
 			}
-
 			// Clears the input
 			strcpy(input, "");
 
 			// Get the next command
 			continue;
 		}
-		
-		if(strcspn(input,"!") != 0 && strcmp(input,"\n") != 0)
-			{						
-							
+		//ALIASES		
+			if(strcspn(input,"!") != 0 && strcmp(input,"\n") != 0)
+			{													
 					strcpy(history[(command_cnt) % 20].command,input);
-					history[(command_cnt) % 20].counter = command_cnt + 1;
-				
+					history[(command_cnt) % 20].counter = command_cnt + 1;				
 					command_cnt++; 	
 			}
+		
+			index = strcspn(input," ");
+			alias = strdup(substring(input,0,index - 1));			
+			int aliasIndex = isAlias(alias,aliases);
+			
+			if (aliasIndex != -1)
+			{	
+				
+				if(index != 0)
+				{
+				char* aliasRemainder = strdup(substring(input,index,strlen(input)));
+				char* aliasCommand = strdup(aliases[aliasIndex].value);					
+				strcat(aliasCommand,aliasRemainder);
+				strcpy(input,aliasCommand); 
+				printf("FUCKIN INPUT IS:%s\n",input);	
+				}
+				else
+				{	
+					strcpy(input,aliases[aliasIndex].value);
+				}			
+			}
+
+		
+	
+		
 		
 		token = strtok(input, delimiters);
 
@@ -250,11 +281,13 @@ int execute_command(char **tokens,history_command* history)
 		else
 		display_history(history);				
 	}
+
 	else if (tokens[0][0] == '!' && strlen(tokens[0]) == 1)
 	{
 	printf ("Invalid format of argument! Either use !! or !-number \n");
 	return 0;
 	}
+
 	else if(tokens[0][0] == '!' && tokens[0][1] != '!' && tokens[0][1] != '-')
 	{			
 		if(strlen(tokens[0]) > 3){
@@ -444,7 +477,6 @@ for(history_number = 0; history_number < commandNumber; history_number++)
 	}
 }
 
-
 //this works 
 int numberOfCommands(history_command* history)
 {
@@ -596,4 +628,31 @@ void saveHistory(history_command* history)
     		fclose(hist);
 	}
    
+}
+
+int isAlias(char* line,aliases_mapping aliases[ALIASES_COUNT])
+{
+	for (int index = 0; index < ALIASES_COUNT; index++)
+	{
+	
+		if (aliases[index].alias != NULL)
+		{
+			
+			if(strcmp(aliases[index].alias,line) == 0 || strcmp(aliases[index].alias,substring(line,0,strlen(line)-2)) == 0)
+			{
+			//maybe another if
+			return index;
+			}
+		}	
+	}
+return -1;
+}
+
+
+char* substring(char line[MAXCHAR],int index1,int index2)
+{
+int cnt = 0;
+char *substring = (char *)malloc(MAXCHAR * sizeof(char *));
+memmove(substring,line + index1,index2-index1+1);	
+return substring;
 }
