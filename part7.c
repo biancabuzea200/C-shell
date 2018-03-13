@@ -28,18 +28,20 @@ void readInput(char **tokens,history_command* history,aliases_mapping* aliases);
 void setToHome();
 void setPath(char *token);
 void printPath();
-int execute_command(char **tokens,history_command* history);
+int execute_command(char **tokens,history_command* history,aliases_mapping aliases[ALIASES_COUNT]);
 int getNumberOfTokens(char **tokens);
 void wrongNumOfTokensError(char *command);
 int numberOfCommands(history_command* history);
 void display_history(history_command* history);
-int parseHistory(char* history_invocation,history_command* history);
+int parseHistory(char* history_invocation,history_command* history,aliases_mapping aliases[ALIASES_COUNT]);
 int isNumber(char* string);
 int lastCommand(history_command* history);
 void saveHistory(history_command* history);
 void loadHistory(history_command* history);
 int isAlias(char* line,aliases_mapping aliases[ALIASES_COUNT]);
 char* substring(char line[MAXCHAR],int index1,int index2);
+int aliasesFreeIndex(aliases_mapping aliases[ALIASES_COUNT]);
+
 
 int main()
 {	
@@ -50,14 +52,14 @@ int main()
 	// Save the PATH to restore it later
 	path = strdup(getenv("PATH")); 
 
-	strcpy(aliases[0].value,"ls . . .");
-	strcpy(aliases[0].alias,"dd");
+	//strcpy(aliases[0].value,"ls");
+	//sstrcpy(aliases[0].alias,"dd");
 	
 
 	// Set the current direcotry to home
 	setToHome();
 	
-	loadHistory(history);	
+	//loadHistory(history);	
 	// Read the input from the user
 	readInput(input,history,aliases);
 
@@ -113,12 +115,7 @@ void readInput(char **tokens,history_command* history,aliases_mapping* aliases)
 			continue;
 		}
 		//ALIASES		
-			if(strcspn(input,"!") != 0 && strcmp(input,"\n") != 0)
-			{													
-					strcpy(history[(command_cnt) % 20].command,input);
-					history[(command_cnt) % 20].counter = command_cnt + 1;				
-					command_cnt++; 	
-			}
+			
 		
 			index = strcspn(input," ");
 			alias = strdup(substring(input,0,index - 1));			
@@ -127,18 +124,30 @@ void readInput(char **tokens,history_command* history,aliases_mapping* aliases)
 			if (aliasIndex != -1)
 			{	
 				
-				if(index != 0)
+				if(strlen(input) -1> strlen(aliases[aliasIndex].value))
 				{
 				char* aliasRemainder = strdup(substring(input,index,strlen(input)));
 				char* aliasCommand = strdup(aliases[aliasIndex].value);					
 				strcat(aliasCommand,aliasRemainder);
 				strcpy(input,aliasCommand); 
-				printf("FUCKIN INPUT IS:%s\n",input);	
+					
 				}
 				else
 				{	
+				
+					
 					strcpy(input,aliases[aliasIndex].value);
+					strcat(input,"\n");
+					
+						
 				}			
+			}
+
+			if(strcspn(input,"!") != 0 && strcmp(input,"\n") != 0)
+			{													
+					strcpy(history[(command_cnt) % 20].command,input);
+					history[(command_cnt) % 20].counter = command_cnt + 1;				
+					command_cnt++; 	
 			}
 
 		
@@ -156,11 +165,12 @@ void readInput(char **tokens,history_command* history,aliases_mapping* aliases)
 			}
 			token = strtok(NULL, delimiters);
 		}
+
 		tokens[token_cnt] = NULL;
 	
 		if (tokens[0] != NULL)
 		{					
-			if(execute_command(tokens,history) == -1)			
+			if(execute_command(tokens,history,aliases) == -1)			
 			break;			
 		}	
   }
@@ -207,7 +217,7 @@ void setPath(char *token)
 The following function executes the commands. The function returns -1 if the exit command is invoked.
 Parameters: char** tokens and char* initPath.
 */
-int execute_command(char **tokens,history_command* history)
+int execute_command(char **tokens,history_command* history,aliases_mapping aliases[ALIASES_COUNT])
 {	
 	pid_t pid;
 	int pid_status;
@@ -322,7 +332,7 @@ int execute_command(char **tokens,history_command* history)
 		{
 			if (strcmp(history[atoi(commandNumber)-1].command, "\n") != 0){
 	
-				if(parseHistory(history[atoi(commandNumber)-1].command,history) == -1)
+				if(parseHistory(history[atoi(commandNumber)-1].command,history,aliases) == -1)
 					return -1;
 				}	
 		}
@@ -349,7 +359,7 @@ int execute_command(char **tokens,history_command* history)
 				
 				if (strcmp(history[lastCommand(history)].command, "\n") != 0){
 				
-					if(parseHistory(history[lastCommand(history)].command,history) == -1)
+					if(parseHistory(history[lastCommand(history)].command,history,aliases) == -1)
 						return -1;	
 				}				
 			}
@@ -394,21 +404,96 @@ int execute_command(char **tokens,history_command* history)
 					if (lastCommand(history) - atoi(commandNumber) + 1 > 0)	{
 						
 									
-						if(parseHistory(history[lastCommand(history)  - atoi(commandNumber) +1].command,history) == -1)
+						if(parseHistory(history[lastCommand(history)  - atoi(commandNumber) +1].command,history,aliases) == -1)
 							return -1;
 					}
 					else if (lastCommand(history) - atoi(commandNumber) + 1 == 0){
-						if(parseHistory(history[0].command,history) == -1)
+						if(parseHistory(history[0].command,history,aliases) == -1)
 						return -1;
 					}
 					else
 					{	
-					if(parseHistory(history[20 - (atoi(commandNumber) - lastCommand(history))+1].command,history) == -1)
+					if(parseHistory(history[20 - (atoi(commandNumber) - lastCommand(history))+1].command,history,aliases) == -1)
 					return -1;	
 					}
 				}											
 			}	
 		}
+
+	else if(strcmp(tokens[0],"alias") == 0)
+	{
+		int freeIndex = aliasesFreeIndex(aliases);		
+	
+
+		if(getNumberOfTokens(tokens) != 3)
+		{
+		printf("Invalid number of arguments for function alias!\n");
+		}
+	
+		else if(freeIndex == -1)
+		{
+		printf("The aliases array is full! Please remove an alias before adding more.\n");		
+		}
+		else if(isAlias(tokens[1],aliases) != -1)
+		{
+		strcpy(aliases[isAlias(tokens[1],aliases)].alias,tokens[1]);
+		strcpy(aliases[isAlias(tokens[1],aliases)].value,tokens[2]);
+		}
+		
+		
+			
+		else 
+		{
+
+		strcpy(aliases[freeIndex].alias,tokens[1]);
+		strcpy(aliases[freeIndex].value,tokens[2]);
+		
+		}
+		
+				
+		
+	}
+	
+	else if(strcmp(tokens[0],"unalias") == 0 )
+	{
+	
+	
+		if(getNumberOfTokens(tokens) != 2)
+		{
+		printf("Invalid number of arguments for function unalias!\n");
+		}
+	
+		else if(isAlias(tokens[1],aliases) != -1)
+		{
+		strcpy(aliases[isAlias(tokens[1],aliases)].alias,"");
+		strcpy(aliases[isAlias(tokens[1],aliases)].value,"");
+		}	
+	
+
+	}
+	
+	else if(strcmp(tokens[0],"aliases") == 0)
+	{
+		if (getNumberOfTokens(tokens) != 1)
+		{
+		printf("Invalid number of arguments for function aliases!\n");
+		}
+		else if(aliasesFreeIndex(aliases) == 0)
+		{
+		printf("There are no aliases saved\n");
+		}
+		else 
+		{
+			for(int i = 0;i < aliasesFreeIndex(aliases);i++)
+		
+			{
+			printf("%d.%s\n",i+1,aliases[i].alias);
+			}
+		}
+
+	}
+		
+	
 	else
 	{
 		
@@ -492,7 +577,7 @@ return i;
 /*
 This parses History inputs.
 */
-int parseHistory(char* history_invocation,history_command* history)
+int parseHistory(char* history_invocation,history_command* history,aliases_mapping aliases[ALIASES_COUNT])
 {
 	int token_cnt = 0; // number of tokens
 	char* history1 = strdup(history_invocation);
@@ -515,7 +600,7 @@ int parseHistory(char* history_invocation,history_command* history)
 		parsedHistory[token_cnt] = NULL;
 		if (parsedHistory[0] != NULL)
 		{						
-			if(execute_command(parsedHistory,history) == -1)
+			if(execute_command(parsedHistory,history,aliases) == -1)
 					return -1;
 									
 		}
@@ -655,4 +740,22 @@ int cnt = 0;
 char *substring = (char *)malloc(MAXCHAR * sizeof(char *));
 memmove(substring,line + index1,index2-index1+1);	
 return substring;
+}
+
+int aliasesFreeIndex(aliases_mapping aliases[ALIASES_COUNT])
+{
+	int index = 0;
+	
+	for(int i = 0;i < ALIASES_COUNT; i++)
+	{
+		if(strcmp(aliases[i].alias,"") == 0)
+		{
+		return index;
+		}
+	index ++;
+	}
+
+	//returns -1 if the array is full
+	return -1;
+
 }
