@@ -30,8 +30,7 @@ int main()
     char *path;
 
     history_next = 0;
-    loadHistory();
-    //printHistory();
+    //loadHistory();
 
     // Print PATH environment variable
     printf("PATH IS -> ");
@@ -45,6 +44,9 @@ int main()
 
     // Read the input from the user
     readInput(input);
+
+    //save history
+    //saveHistory();
 
     // Restore the original PATH
     setPath(path);
@@ -60,11 +62,20 @@ Loads the history from .hist_list into the history data structure.
 void loadHistory()
 {
     FILE *hist = fopen(HISTORY_PATH, "r");
-    int i = 19;
-    while(!feof(hist))
+    int i = 0;
+    char stack[20][MAXCHAR];
+    while(!feof(hist) && i < 20)
     {
-      fgets(history[i], MAXCHAR, hist);
-      i--;
+      fgets(stack, MAXCHAR, hist);
+      i++;
+    }
+    for(int i = 19; i>=0; i--)
+    {
+        if(stack[i] == NULL || strcmp(stack[i], "\n") == 0 || strcmp(stack[i], "") == 0)
+        {
+            continue;
+        }
+        saveCmd(stack[i]);
     }
     fclose(hist);
 }
@@ -79,11 +90,13 @@ void saveHistory()
     {
         if(strcmp(history[i], "") == 0) continue;
         fprintf(hist, "%s", history[i]);
+        fflush(hist);
     }
     for(int i = 19; i>=history_next; i--)
     {
       if(strcmp(history[i], "") == 0) continue;
       fprintf(hist, "%s", history[i]);
+      fflush(hist);
     }
     fclose(hist);
     printf("History saved!\n");
@@ -226,8 +239,6 @@ Parameters: char* token
 */
 void setPath(char *token)
 {
-
-
     if (setenv("PATH",token,1) != 0)
     {
         printf("Error while setting the path!\n");
@@ -285,18 +296,8 @@ int execute_command(char **tokens)
             wrongNumOfTokensError("cd");
         }
     }
-    else if(strcmp(tokens[0], "history") == 0)
-    {
-      printf("History\n");
-      printHistory();
-    }
-    else if(strcmp(tokens[0], "next") == 0)
-    {
-      printf("%d/n", history_next);
-    }
     else if(strcmp(exit_command, tokens[0]) == 0)
     {
-        saveHistory();
         if(getNumberOfTokens(tokens) > 1)
         {
             printf("Invalid number of parameters for exit command!\n");
@@ -308,6 +309,57 @@ int execute_command(char **tokens)
         }
     }
 
+    //history part
+    else if(strcmp(tokens[0], "history") == 0) // display command history
+    {
+        if(getNumberOfTokens(tokens) > 1)
+		{
+			printf("Invalid number of arguments - the function expects 1 argument only!\n");
+		}
+        else
+        {
+            printHistory();
+        }
+    }
+    else if (tokens[0][0] == '!' && strlen(tokens[0]) == 1) // only ! entered
+	{
+	    printf ("Invalid format of argument! Either use !! or !-number \n");
+	    return 0;
+    }
+    else if(tokens[0][0] == '!' && tokens[0][1] == '!') // execute last command
+	{	
+		if(strlen(tokens[0]) != 2)
+			{
+				printf("Invalid format for the function !!. The function !! will excecute the last command in history \n");
+				return 0;
+			}
+
+		if(getNumberOfTokens(tokens) != 1)
+		{ 
+			printf("Invalid number of arguments!\n");
+			return 0;
+		}
+		else 
+		{
+            int last = history_next - 1;
+            if(last < 0)
+            {
+                last = 20 - last;
+            }
+            if(history[last] != NULL)
+			{
+                execute_command(history[last]);
+			}
+			else 
+			{
+				printf("There are no commands saved in history!\n");
+			}
+		}
+	}
+
+
+
+    // create child process
     else
     {
         pid = fork();
