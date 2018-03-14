@@ -50,8 +50,6 @@ int main()
 	// Save the PATH to restore it later
 	path = strdup(getenv("PATH")); 
 
-	strcpy(aliases[0].value,"ls . . .");
-	strcpy(aliases[0].alias,"dd");
 	
 
 	// Set the current direcotry to home
