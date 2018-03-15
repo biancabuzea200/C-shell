@@ -120,7 +120,7 @@ void readInput(char **tokens,history_command* history,aliases_mapping* aliases)
 			{	
 				
 			
-				if(strlen(input) -1> strlen(aliases[aliasIndex].value))
+				if(strlen(input) -1> strlen(aliases[aliasIndex].alias))
 				{
 				char* aliasRemainder = strdup(substring(input,index,strlen(input)));
 			
