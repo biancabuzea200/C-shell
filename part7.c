@@ -11,6 +11,7 @@
 #define HISTORY_COUNT 20
 #define ALIASES_COUNT 10
 #define HISTORY_PATH ".hist_list"
+#define ALIASES_PATH ".aliases"
 
 typedef struct history_command
 {
@@ -32,6 +33,7 @@ int execute_command(char **tokens,history_command* history,aliases_mapping alias
 int getNumberOfTokens(char **tokens);
 void wrongNumOfTokensError(char *command);
 int numberOfCommands(history_command* history);
+int numberOfAliases(aliases_mapping* aliases);
 void display_history(history_command* history);
 int parseHistory(char* history_invocation,history_command* history,aliases_mapping aliases[ALIASES_COUNT]);
 int isNumber(char* string);
@@ -41,6 +43,8 @@ void loadHistory(history_command* history);
 int isAlias(char* line,aliases_mapping aliases[ALIASES_COUNT]);
 char* substring(char line[MAXCHAR],int index1,int index2);
 int aliasesFreeIndex(aliases_mapping aliases[ALIASES_COUNT]);
+void saveAliases(aliases_mapping* aliases);
+void loadAliases(aliases_mapping* aliases);
 
 
 int main()
@@ -56,10 +60,12 @@ int main()
 	setToHome();
 	
 	loadHistory(history);	
+	loadAliases(aliases);
 	// Read the input from the user
 	readInput(input,history,aliases);
 
 	saveHistory(history);
+	saveAliases(aliases);
 	
 	// Restore the original PATH
 	setPath(path);
@@ -586,6 +592,16 @@ while(strlen(history[i].command) > 0 && i < 20)
 return i;
 }
 
+int numberOfAliases(aliases_mapping* aliases)
+{
+	int i = 0;
+	while(strlen(aliases[i].value) > 0 && i < ALIASES_COUNT)
+	{ 
+		i++; 
+	}
+	return i;
+}
+
 /*
 Function used to parse history invocations.
 Parameters: char* history_invocation
@@ -691,6 +707,29 @@ int lastCommand(history_command* history)
 	return index;
 }
 
+void loadAliases(aliases_mapping* aliases)
+{
+	FILE *al_f = fopen(ALIASES_PATH, "r");
+	char alias[50];
+	char value[MAXCHAR];
+	int i = 0;
+
+	if(al_f == NULL)
+	{
+		printf("Failed to open the file .aliases!\n");
+	}
+	else
+	{
+		while(!feof(al_f))
+		{
+			fscanf(al_f, "%s %s\n", alias, value);
+			strcpy(aliases[i].alias, alias);
+			strcpy(aliases[i].value, value);
+			i++;
+		}
+		fclose(al_f);
+	}
+}
 
 void loadHistory(history_command* history)
 {		
@@ -765,6 +804,28 @@ FILE *hist = fopen(HISTORY_PATH,"w");
 	}
    
 }
+
+void saveAliases(aliases_mapping* aliases)
+{
+	int alias_number ;
+	int index = numberOfAliases(aliases);
+	FILE *al_f = fopen(ALIASES_PATH, "w");
+	
+	if(al_f == NULL)
+	{
+		printf("Failed to open the file .aliases! \n ");
+	}
+	else
+	{	
+		for (alias_number=1; alias_number <= index; alias_number++)
+		{	
+			fprintf(al_f, "%s %s\n", aliases[alias_number-1].alias, aliases[alias_number-1].value);		
+		}  
+		fclose(al_f);
+	}
+   
+}
+
 /*
 Takes a string and checks if it is an alias.The function returns the index in the aliases array if the string is an alias or -1 if it is not an alias.
 Parameters char* line
