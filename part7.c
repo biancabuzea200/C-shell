@@ -432,23 +432,7 @@ int execute_command(char **tokens,history_command* history,aliases_mapping alias
 				
 		char command[MAXCHAR] = "";
 
-		if(getNumberOfTokens(tokens) == 1)
-		{
-			int num = numberOfAliases(aliases);
-			if(num == 0)
-			{
-				printf("There are not any aliases! \n");
-			}
-			else
-			{
-				int i;
-				for(i = 0; i < num; i++)
-				{
-					printf("%s %s\n", aliases[i].alias, aliases[i].value);
-				}
-			}
-		}
-		else if(getNumberOfTokens(tokens) < 3)
+		if(getNumberOfTokens(tokens) < 3)
 		{
 		printf("Invalid number of arguments for function alias!\n");
 		}
