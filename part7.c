@@ -119,9 +119,9 @@ void readInput(char **tokens,history_command* history,aliases_mapping* aliases)
 		//ALIASES		
 
 			index = strcspn(input," ");
-			alias = strdup(substring(input,0,index - 1));			
+			alias = strdup(substring(input,0,index-1));			
 			int aliasIndex = isAlias(alias,aliases);
-			
+			printf("%d",index);
 			if (aliasIndex != -1)
 			{	
 				
@@ -641,8 +641,6 @@ int parseHistory(char* history_invocation,history_command* history,aliases_mappi
 			
 			if (aliasIndex != -1)
 			{	
-				
-			
 				if(strlen(history1) -1 > strlen(aliases[aliasIndex].value))
 				{
 				char* aliasRemainder = strdup(substring(history1,index,strlen(history1)));
@@ -726,8 +724,11 @@ int lastCommand(history_command* history)
 void loadAliases(aliases_mapping* aliases)
 {
 	FILE *al_f = fopen(ALIASES_PATH, "r");
-	char alias[50];
-	char value[MAXCHAR];
+	char* alias;
+	char* value;
+	char line[MAXCHAR] = "";
+	int index = 0;
+	char whitespace;
 	int i = 0;
 
 	if(al_f == NULL)
@@ -736,12 +737,38 @@ void loadAliases(aliases_mapping* aliases)
 	}
 	else
 	{
-		while(!feof(al_f))
+		while(fgets(line, sizeof(line), al_f))
 		{
-			fscanf(al_f, "%s %s\n", alias, value);
+		
+		index = strcspn(line," ");
+
+		
+	
+		alias = strdup(substring(line,0,index - 1));
+		
+		//if(strlen(alias) == 1)
+		//strcat(alias," ");		
+
+		value = strdup(substring(line,index+1,strlen(line) - 2));
+		
+		printf("ALIAS:%s",alias);
+		printf("VALUE:%s",value);		
+		strcpy(aliases[i].alias,alias);
+		strcpy(aliases[i].value,value);
+	/*
+			
+			fscanf(al_f, "%s %s", alias,value);
+			if(strcmp(alias,"") == 0)
+			break;
+			
 			strcpy(aliases[i].alias, alias);
+			
 			strcpy(aliases[i].value, value);
+			
 			i++;
+		*/
+
+		i++;
 		}
 		fclose(al_f);
 	}
@@ -749,11 +776,13 @@ void loadAliases(aliases_mapping* aliases)
 
 void loadHistory(history_command* history)
 {		
+	
 	FILE *hist = fopen(HISTORY_PATH, "r");
 	char input[MAXCHAR] = "";
     	char cnt[100];
 	int whitespace;
 	int counter;
+	
 	
 	if(hist == NULL)
 	{
@@ -761,21 +790,17 @@ void loadHistory(history_command* history)
 	}
 	else
 	{	
-		//int i = -1;
+		
 		while(!feof(hist))
 		{
-			//i++;
 			fscanf(hist,"%s",cnt);
 			counter = atoi(cnt);
 			if(counter == 0)
 			{
 				printf("Invalid format of .hist_list file!\n");
 				hist = fopen(HISTORY_PATH,"w");
-				//history = malloc(sizeof(history_command)*20);
 				break;
 			}
-			
-			
 			//fgetc used to take the space between the counter and the command
 			whitespace = fgetc(hist);
 			
@@ -783,7 +808,6 @@ void loadHistory(history_command* history)
 			{
 				printf("Invalid format of .hist_list file!\n");
 				hist = fopen(HISTORY_PATH,"w");
-				//history = malloc(sizeof(history_command)*20);
 				break;
 			}
 			fgets(input,MAXCHAR,hist);		
@@ -825,6 +849,7 @@ void saveAliases(aliases_mapping* aliases)
 {
 	int alias_number ;
 	int index = numberOfAliases(aliases);
+	setToHome();
 	FILE *al_f = fopen(ALIASES_PATH, "w");
 	
 	if(al_f == NULL)
@@ -835,6 +860,7 @@ void saveAliases(aliases_mapping* aliases)
 	{	
 		for (alias_number=1; alias_number <= index; alias_number++)
 		{	
+			//strcat(aliases[alias_number-1].value,"\n");
 			fprintf(al_f, "%s %s\n", aliases[alias_number-1].alias, aliases[alias_number-1].value);		
 		}  
 		fclose(al_f);
